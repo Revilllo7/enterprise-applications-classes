@@ -21,6 +21,7 @@ public class Main {
         addService.add(new Employee("Karol Bielak", "karol@techcorp.com", "DevHouse", Position.PROGRAMISTA, 9000));
         addService.add(new Employee("Jan Nowak", "jan@techcorp.com", "TechCorp", Position.MANAGER, 12500));
         addService.add(new Employee("Kasia Lis", "kasia@devhouse.com", "DevHouse", Position.STAZYSTA, 3200));
+        addService.add(new Employee("Kasia Owca", "kasia@devhouse.com", "DevHouse", Position.STAZYSTA, 3100));
 
         System.out.println("\n=== All Employees ===");
         viewService.printAll();

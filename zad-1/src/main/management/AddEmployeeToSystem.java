@@ -17,6 +17,7 @@ public class AddEmployeeToSystem {
     public boolean add(@NotNull Employee employee) {
         if (!validator.isEmailUnique(employee.getEmail(), repository.getEmployees())) {
             System.out.println("email already exists. Not an unique identifier: " + employee.getEmail());
+            System.out.println("Did not add this employee into the system: " + employee.getFullName());
             return false;
         }
         repository.add(employee);
