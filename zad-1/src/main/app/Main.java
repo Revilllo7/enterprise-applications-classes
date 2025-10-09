@@ -18,6 +18,7 @@ public class Main {
 
 
         addService.add(new Employee("Anna Kowalska", "anna@techcorp.com", "TechCorp", Position.PROGRAMISTA, 8500));
+        addService.add(new Employee("Karol Bielak", "karol@techcorp.com", "DevHouse", Position.PROGRAMISTA, 9000));
         addService.add(new Employee("Jan Nowak", "jan@techcorp.com", "TechCorp", Position.MANAGER, 12500));
         addService.add(new Employee("Kasia Lis", "kasia@devhouse.com", "DevHouse", Position.STAZYSTA, 3200));
 
