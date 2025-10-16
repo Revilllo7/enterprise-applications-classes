@@ -33,9 +33,8 @@ public class EmployeeService {
     }
 
 
-    /**
-     * Zwraca listę pracowników, których wynagrodzenie jest niższe niż baza stanowiska.
-     */
+
+     // Zwraca listę pracowników, których wynagrodzenie jest niższe niż bazowe dla ich stanowiska.
     public List<Employee> validateSalaryConsistency() {
         return employeesByEmail.values().stream()
                 .filter(employee -> {
@@ -47,9 +46,7 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Dla wszystkich firm tworzy mapę: companyName -> CompanyStatistics
-     */
+    // tworzy mapę statystyk firmy (nazwa firmy -> statystyki)
     public Map<String, CompanyStatistics> getCompanyStatistics() {
         // grupowanie po nazwie firmy bez zmiany oryginalnego zapisu (trimowane)
         Map<String, List<Employee>> grouped = employeesByEmail.values().stream()
@@ -74,9 +71,7 @@ public class EmployeeService {
                 ));
     }
 
-    /**
-     * Raport o niespójności wynagrodzenia w stosunku do bazy stanowiska.
-     */
+    // raport w formacie "Imię Nazwisko (email): aktualne_wynagrodzenie < bazowe_wynagrodzenie"
     public List<String> salaryConsistencyReport() {
         return validateSalaryConsistency().stream()
                 .map(employee -> String.format("%s (%s): %.2f < %.2f", employee.getFullName(), employee.getEmail(), employee.getSalary(), employee.getPosition().getBaseSalary()))

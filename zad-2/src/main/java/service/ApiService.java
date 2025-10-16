@@ -79,7 +79,7 @@ public class ApiService {
                     companyName = safeGetString(object.getAsJsonObject("company"), "name");
                 }
 
-                // przypisujemy PROGRAMISTA i jego bazową stawkę
+                // przypisujemy PROGRAMISTA i bazową stawkę
                 Position pos = Position.PROGRAMISTA;
                 double salary = pos.getBaseSalary();
 
@@ -163,7 +163,7 @@ public class ApiService {
             char character = line.charAt(i);
             if (character == '"') {
                 if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
-                    // escaped quote
+                    // znak ucieczki - podwójny cudzysłów
                     current.append('"');
                     i++;
                 } else {

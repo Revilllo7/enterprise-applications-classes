@@ -7,7 +7,7 @@ import java.util.List;
  */
 public record ImportSummary(int importedCount, List<String> errors) {
 
-    // convenience method for tests / callers
+    // dla testów - ile błędów
     public int getFailedCount() {
         return errors == null ? 0 : errors.size();
     }

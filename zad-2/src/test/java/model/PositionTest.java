@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PositionTest {
     @Test
     void valueOf_and_baseSalary_are_consistent() {
-        // ensure enum value exists and base salary getter works
+        // sprawdź, czy można znaleźć po nazwie i czy baza jest sensowna
         Position p = Position.valueOf("PROGRAMISTA");
         assertNotNull(p);
         assertTrue(p.getBaseSalary() > 0, "Base salary should be positive for PROGRAMISTA");

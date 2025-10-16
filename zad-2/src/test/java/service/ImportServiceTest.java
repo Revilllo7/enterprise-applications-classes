@@ -39,7 +39,7 @@ public class ImportServiceTest {
         ImportService importService = new ImportService(employeeService);
         ImportSummary summary = importService.importFromCsv(Path.of("src/test/resources/employees.csv"), 2048);
 
-        // test CSV has 5 rows: 2 valid, 3 invalid (INVALID_POSITION, negative salary, non-numeric salary).
+        // test CSV ma 5 poprawnych i 3 błędne wiersze
         assertEquals(2, summary.importedCount(), "Expected 2 successfully imported employees");
         assertEquals(3, summary.getFailedCount(), "Expected 3 failed rows");
         assertTrue(summary.errors().size() >= 3, "Expected error messages for failed rows");

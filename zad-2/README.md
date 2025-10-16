@@ -1,15 +1,39 @@
-to run main:
-mvn clean compile exec:java
-
-to run tests:
-mvn test
-
 # How to run?
 ## To run main:
 ```java
 mvn clean compile exec:java
 ```
 > shows CSV import, salary consistency check, company statistics: employee count, avgSalary, highest paid employee
+
+### expected output:
+```java
+=== CSV Import ===
+ImportSummary{importedCount=6, errors=[Line 5: invalid position 'INVALID_POSITION', Line 6: invalid salary '-5000.0', Line 7: invalid salary 'abc']}
+
+=== Fetch from API ===
+Imported from API: 10
+
+=== Salary consistency check ===
+Canna Nowak | canna.nowak@example.com | DataSoft | PREZES | 23000.00
+Ubogi Kamiński | ubogi.kaminski@example.com | TechCorp | PROGRAMISTA | 2000.00
+
+=== Company statistics ===
+Johns Group -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Kurtis Weissnat'}
+Yost and Sons -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Glenna Reichert'}
+TechCorp -> CompanyStatistics{employeeCount=3, averageSalary=10333.33, highestPaid='Wojtek Kamiński'}
+Hoeger LLC -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Clementina DuBuque'}
+Keebler LLC -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Chelsey Dietrich'}
+DataSoft -> CompanyStatistics{employeeCount=3, averageSalary=16666.67, highestPaid='Canna Nowak'}
+Romaguera-Crona -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Leanne Graham'}
+Abernathy Group -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Nicholas Runolfsdottir V'}
+Robel-Corkery -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Patricia Lebsack'}
+Deckow-Crist -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Ervin Howell'}
+Romaguera-Jacobson -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Clementine Bauch'}
+Considine-Lockman -> CompanyStatistics{employeeCount=1, averageSalary=8000.00, highestPaid='Mrs. Dennis Schulist'}
+------------------------------------------------------------------------
+BUILD SUCCESS
+------------------------------------------------------------------------
+```
 
 
 ## to run tests:
@@ -18,4 +42,25 @@ mvn test
 ```
 > runs additional tests skipped in main
 
+### expected output:
+```java
+-------------------------------------------------------
+T E S T S
+-------------------------------------------------------
+Running model.PositionTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s -- in model.PositionTest
+Running service.ImportServiceTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in service.ImportServiceTest
+Running service.ApiServiceTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.134 s -- in service.ApiServiceTest
+Running service.EmployeeServiceTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in service.EmployeeServiceTest
+ 
+Results:
+ 
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
 
+------------------------------------------------------------------------
+BUILD SUCCESS
+------------------------------------------------------------------------
+```

@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-//Import z CSV w trybie strumieniowym — bez wczytywania całego pliku do pamięci.
+// Import z CSV w trybie strumieniowym - bez wczytywania całego pliku do pamięci
 
 public class ImportService {
     private final EmployeeService employeeService;
@@ -29,7 +29,7 @@ public class ImportService {
      * @param csvPath  ścieżka pliku CSV
      * @param maxLines limit liczby linii do przetworzenia (0 = bez limitu)
      */
-    public ImportSummary importFromCsv(Path csvPath, int maxLines) throws IOException { //if you need 2,147,483,648 lines for data, go touch grass
+    public ImportSummary importFromCsv(Path csvPath, int maxLines) throws IOException {
         List<String> errors = new ArrayList<>();
         AtomicInteger imported = new AtomicInteger();
 
@@ -61,7 +61,7 @@ public class ImportService {
                             return;
                         }
 
-                        // parse position case-insensitively
+                        // parsowanie stanowiska (case insensitive)
                         Position position;
                         try {
                             position = Position.valueOf(positionString.trim().toUpperCase(Locale.ROOT));
@@ -97,7 +97,7 @@ public class ImportService {
         return new ImportSummary(imported.get(), errors);
     }
 
-    // prosta walidacja pól, może być rozszerzona o dodatkowe reguły
+    // walidacja danych pracownika
     private void validateEmployeeData(String fullName, String email, String company, Position position, double salary) throws InvalidDataException {
         if (salary < 0) {
             throw new InvalidDataException("invalid salary '" + salary + "'");
