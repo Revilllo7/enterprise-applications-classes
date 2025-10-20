@@ -1,4 +1,11 @@
+
 package service;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import java.lang.reflect.Method;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -18,6 +25,42 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ApiServiceHttpTest {
+
+    static Object[][] csvLineCases() {
+        return new Object[][]{
+            {"a,b,c,d,e,f", 6},
+            {"\"a\",b,c,d,e,f", 6},
+            {"a,\"b\",c,d,e,f", 6},
+            {"a,\"b, c\",d,e,f", 5}, // quoted comma is one field
+            {",,,,,", 6},
+            {"a,b,c", 3}
+        };
+    }
+
+    @ParameterizedTest
+    @MethodSource("csvLineCases")
+    void parseCsvLine_handles_quotes_and_commas(String line, int expectedFields) throws Exception {
+        ApiService svc = new ApiService();
+        Method m = ApiService.class.getDeclaredMethod("parseCsvLine", String.class);
+        m.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        java.util.List<String> fields = (java.util.List<String>) m.invoke(svc, line);
+        assertEquals(expectedFields, fields.size());
+    }
+
+    @Test
+    void safeGetString_handles_missing_null_and_wrong_type() throws Exception {
+        ApiService svc = new ApiService();
+        Method m = ApiService.class.getDeclaredMethod("safeGetString", JsonObject.class, String.class);
+        m.setAccessible(true);
+        JsonObject obj = JsonParser.parseString("{\"name\":null}").getAsJsonObject();
+        assertEquals("", m.invoke(svc, obj, "name"));
+        assertEquals("", m.invoke(svc, obj, "missing"));
+        obj.addProperty("num", 123);
+        assertEquals("123", m.invoke(svc, obj, "num"));
+    }
+
+    // Removed invalid data: URI test. Use local server or valid HTTP/HTTPS URIs for fetchEmployeesFromApi tests.
     private static HttpServer server;
     private static int port;
 

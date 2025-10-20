@@ -1,5 +1,5 @@
-# How to run?
-## To run main:
+# HOW TO RUN?
+## TO RUN THE APPLICATION:
 ```java
 mvn clean compile exec:java
 ```
@@ -36,7 +36,7 @@ BUILD SUCCESS
 ```
 
 
-## to run tests:
+## RUN TESTS ONLY:
 ```java
 mvn test
 ```
@@ -45,22 +45,46 @@ mvn test
 ### expected output:
 ```java
 -------------------------------------------------------
-T E S T S
+  T E S T S
 -------------------------------------------------------
+Running model.ImportSummaryTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s -- in model.ImportSummaryTest
+Running model.EmployeeTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s -- in model.EmployeeTest
 Running model.PositionTest
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s -- in model.PositionTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in model.PositionTest
+Running model.CompanyTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.014 s -- in model.CompanyTest
 Running service.ImportServiceTest
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in service.ImportServiceTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s -- in service.ImportServiceTest
 Running service.ApiServiceTest
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.134 s -- in service.ApiServiceTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.248 s -- in service.ApiServiceTest
+Running service.ApiServiceHttpTest
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.248 s -- in service.ApiServiceHttpTest
 Running service.EmployeeServiceTest
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in service.EmployeeServiceTest
- 
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s -- in service.EmployeeServiceTest
+
 Results:
- 
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+
+Tests run: 30, Failures: 0, Errors: 0, Skipped: 0
 
 ------------------------------------------------------------------------
 BUILD SUCCESS
 ------------------------------------------------------------------------
 ```
+
+## RUN TESTS AND GENERATE COVERAGE REPORT:
+```java
+mvn verify
+```
+> runs all tests and generates coverage report in target/site/jacoco/index.html
+
+### expected output:
+
+image: ![coverage report showing 84% coverage](/markdown/coverage-report.png)
+
+## RUN FULL BUILD CYCLE WITH VERIFICATION:
+```java
+mvn clean verify
+```
+> cleans the target directory and runs all tests with verification

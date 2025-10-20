@@ -98,7 +98,7 @@ public class ImportService {
     }
 
     // walidacja danych pracownika
-    private void validateEmployeeData(String fullName, String email, String company, Position position, double salary) throws InvalidDataException {
+    void validateEmployeeData(String fullName, String email, String company, Position position, double salary) throws InvalidDataException {
         if (salary < 0) {
             throw new InvalidDataException("invalid salary '" + salary + "'");
         }
