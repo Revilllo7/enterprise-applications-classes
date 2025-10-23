@@ -60,4 +60,40 @@ class EmployeeServiceTest {
         assertTrue(report.get(0).startsWith("Charlie Chan (charlie@example.com): "));
         assertTrue(report.get(0).contains("<"));
     }
+
+    @Test
+    void getCompanyStatistics_emptyService_returnsEmptyMap() {
+        EmployeeService emptyService = new EmployeeService();
+        assertTrue(emptyService.getCompanyStatistics().isEmpty());
+    }
+
+    @Test
+    void getCompanyStatistics_nullCompanyMappedToUnknown() {
+        EmployeeService s = new EmployeeService();
+        s.addEmployee(new Employee("No Company", "no@c.com", null, Position.STAZYSTA, 3000));
+        Map<String, ?> stats = s.getCompanyStatistics();
+        assertTrue(stats.containsKey("unknown"));
+    }
+
+    @Test
+    void validateSalaryConsistency_ignores_nullPosition_and_notFlag_equalBase() {
+        EmployeeService s = new EmployeeService();
+        // employee with null position should be ignored
+        s.addEmployee(new Employee("Null Pos", "nullpos@example.com", "X", null, 1000));
+        // employee with salary == base should NOT be underpaid
+        double base = Position.PROGRAMISTA.getSalary();
+        s.addEmployee(new Employee("Exact Base", "exact@example.com", "X", Position.PROGRAMISTA, (int) base));
+        List<Employee> underpaid = s.validateSalaryConsistency();
+        assertTrue(underpaid.stream().noneMatch(e -> e.getEmail().equals("nullpos@example.com")));
+        assertTrue(underpaid.stream().noneMatch(e -> e.getEmail().equals("exact@example.com")));
+    }
+
+    @Test
+    void validateSalaryConsistency_base_doesnt_equal_underpaid() {
+        EmployeeService s = new EmployeeService();
+        double base = Position.MANAGER.getSalary();
+        s.addEmployee(new Employee("Below Base", "below@example.com", "X", Position.MANAGER, (int) base));
+        List<Employee> notUnderpaid = s.validateSalaryConsistency();
+        assertFalse(notUnderpaid.stream().anyMatch(e -> e.getEmail().equals("below@example.com")));
+    }
 }

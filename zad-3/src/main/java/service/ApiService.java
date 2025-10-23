@@ -29,6 +29,11 @@ public class ApiService {
         this.httpClient = HttpClient.newHttpClient();
     }
 
+    // Konstruktor do wstrzykiwania HttpClient (testowanie)
+    ApiService(HttpClient httpClient) {
+        this.httpClient = (httpClient == null) ? HttpClient.newHttpClient() : httpClient;
+    }
+
     /**
      * Wykonuje GET i mapuje dane. Rzuca ApiException w przypadku błędów HTTP lub parsowania.
      * Obsługuje JSON array (stare API) oraz CSV (firstName,lastName,email,companyName,position,salary).
@@ -53,6 +58,11 @@ public class ApiService {
         }
 
         String body = response.body();
+        return parseBody(body);
+    }
+
+    // testowalne bez HTTP
+    List<Employee> parseBody(String body) {
         if (body == null) body = "";
 
         // Najpierw spróbuj JSON array
@@ -73,23 +83,20 @@ public class ApiService {
 
                 String fullName = safeGetString(object, "name"); // używamy jako fullname
                 String email = safeGetString(object, "email");
-
                 String companyName = "";
                 if (object.has("company") && object.get("company").isJsonObject()) {
                     companyName = safeGetString(object.getAsJsonObject("company"), "name");
                 }
 
-                // przypisujemy PROGRAMISTA i bazową stawkę
                 Position position = Position.PROGRAMISTA;
                 double salary = position.getSalary();
-
                 Employee emp = new Employee(fullName, email, companyName, position, salary);
                 result.add(emp);
             }
             return result;
         }
 
-        // Jeżeli to nie był JSON, traktujemy jako CSV
+        // CSV parsing - skopiowane z fetchEmployeesFromApi
         String[] lines = body.split("\\r?\\n");
         int index = 0;
         // pomiń puste linie na początku
@@ -98,7 +105,7 @@ public class ApiService {
         // wykrycie nagłówka
         if (index < lines.length) {
             String first = lines[index].toLowerCase();
-            if (first.contains("email") || first.contains("firstname") || first.contains("firstName".toLowerCase())) {
+            if (first.contains("email") || first.contains("firstname") || first.contains("firstname".toLowerCase())) {
                 index++;
             }
         }
@@ -107,10 +114,7 @@ public class ApiService {
             String line = lines[index].trim();
             if (line.isEmpty()) continue;
             List<String> fields = parseCsvLine(line);
-            if (fields.size() < 6) {
-                // pomijamy niekompletne wiersze
-                continue;
-            }
+            if (fields.size() < 6) continue;
             String firstName = fields.get(0).trim();
             String lastName = fields.get(1).trim();
             String email = fields.get(2).trim();

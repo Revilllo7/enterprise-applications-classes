@@ -1,28 +1,27 @@
-
 package service;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import java.lang.reflect.Method;
-
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import exception.ApiException;
-import model.Employee;
-import model.Position;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.lang.reflect.Method;
+import java.io.IOException;
+import java.util.List;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+import exception.ApiException;
+import model.Employee;
+import model.Position;
 
 class ApiServiceHttpTest {
 
@@ -60,30 +59,19 @@ class ApiServiceHttpTest {
         assertEquals("123", m.invoke(svc, obj, "num"));
     }
 
-    // Removed invalid data: URI test. Use local server or valid HTTP/HTTPS URIs for fetchEmployeesFromApi tests.
-    private static HttpServer server;
-    private static int port;
-
-    @BeforeAll
-    static void startServer() throws IOException {
-        server = HttpServer.create(new InetSocketAddress(0), 0);
-        port = server.getAddress().getPort();
-
-        server.createContext("/json", new Respond("[\n  {\"name\": \"John Doe\", \"email\": \"john@example.com\", \"company\": {\"name\": \"TechCorp\"}}\n]"));
-        server.createContext("/csv", new Respond("firstName,lastName,email,company,position,salary\nAnn,Test,ann@example.com,Acme,PROGRAMISTA,8000\n"));
-        server.createContext("/bad", new Status(500, "oops"));
-        server.start();
-    }
-
-    @AfterAll
-    static void stopServer() {
-        server.stop(0);
-    }
 
     @Test
-    void fetchEmployeesFromApi_parses_json_array() throws Exception {
-        ApiService svc = new ApiService();
-        List<Employee> list = svc.fetchEmployeesFromApi("http://localhost:" + port + "/json");
+    void fetchEmployeesFromApi_parses_json_array_with_mocked_httpclient() throws Exception {
+        HttpClient mockClient = mock(HttpClient.class);
+        @SuppressWarnings("unchecked")
+        HttpResponse<String> mockResponse = (HttpResponse<String>) mock(HttpResponse.class);
+
+        when(mockResponse.statusCode()).thenReturn(200);
+        when(mockResponse.body()).thenReturn("[{\"name\": \"John Doe\", \"email\": \"john@example.com\", \"company\": {\"name\": \"TechCorp\"}}]");
+        when(mockClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockResponse);
+
+        ApiService svc = new ApiService(mockClient);
+        List<Employee> list = svc.fetchEmployeesFromApi("http://dummy/json");
         assertEquals(1, list.size());
         Employee e = list.get(0);
         assertEquals("John Doe", e.getFullName());
@@ -93,32 +81,32 @@ class ApiServiceHttpTest {
     }
 
     @Test
-    void fetchEmployeesFromApi_parses_csv_as_fallback() throws Exception {
-        ApiService svc = new ApiService();
-        List<Employee> list = svc.fetchEmployeesFromApi("http://localhost:" + port + "/csv");
+    void fetchEmployeesFromApi_parses_csv_as_fallback_with_mocked_httpclient() throws Exception {
+        HttpClient mockClient = mock(HttpClient.class);
+        @SuppressWarnings("unchecked")
+        HttpResponse<String> mockResponse = (HttpResponse<String>) mock(HttpResponse.class);
+
+        when(mockResponse.statusCode()).thenReturn(200);
+        when(mockResponse.body()).thenReturn("firstName,lastName,email,company,position,salary\nAnn,Test,ann@example.com,Acme,PROGRAMISTA,8000\n");
+        when(mockClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockResponse);
+
+        ApiService svc = new ApiService(mockClient);
+        List<Employee> list = svc.fetchEmployeesFromApi("http://dummy/csv");
         assertEquals(1, list.size());
         assertEquals("Ann Test", list.get(0).getFullName());
     }
 
     @Test
-    void fetchEmployeesFromApi_throws_on_http_error() {
-        ApiService svc = new ApiService();
-        assertThrows(ApiException.class, () -> svc.fetchEmployeesFromApi("http://localhost:" + port + "/bad"));
-    }
+    void fetchEmployeesFromApi_throws_on_http_error_with_mocked_httpclient() throws Exception {
+        HttpClient mockClient = mock(HttpClient.class);
+        @SuppressWarnings("unchecked")
+        HttpResponse<String> mockResponse = (HttpResponse<String>) mock(HttpResponse.class);
 
-    private record Respond(String body) implements HttpHandler {
-        @Override public void handle(HttpExchange exchange) throws IOException {
-            byte[] data = body.getBytes();
-            exchange.sendResponseHeaders(200, data.length);
-            try (OutputStream os = exchange.getResponseBody()) { os.write(data); }
-        }
-    }
+        when(mockResponse.statusCode()).thenReturn(500);
+        when(mockResponse.body()).thenReturn("oops");
+        when(mockClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockResponse);
 
-    private record Status(int code, String body) implements HttpHandler {
-        @Override public void handle(HttpExchange exchange) throws IOException {
-            byte[] data = body.getBytes();
-            exchange.sendResponseHeaders(code, data.length);
-            try (OutputStream os = exchange.getResponseBody()) { os.write(data); }
-        }
+        ApiService svc = new ApiService(mockClient);
+        assertThrows(ApiException.class, () -> svc.fetchEmployeesFromApi("http://dummy/bad"));
     }
 }
