@@ -81,10 +81,11 @@ mvn verify
 
 ### expected output:
 
-image: ![coverage report showing 84% coverage](/markdown/coverage-report.png)
+image: ![coverage report showing 84% coverage](markdown/coverage-report.png)
 
 ## RUN FULL BUILD CYCLE WITH VERIFICATION:
 ```java
 mvn clean verify
 ```
 > cleans the target directory and runs all tests with verification
+
