@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.google.gson.*;
 import com.google.gson.JsonObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,7 @@ public class ApiService {
     private final Gson gson;
     private final String defaultApiUrl;
 
+    @Autowired
     public ApiService(HttpClient httpClient, Gson gson, @Value("${app.api.url}") String defaultApiUrl) {
         this.httpClient = (httpClient == null) ? HttpClient.newHttpClient() : httpClient;
         this.gson = (gson == null) ? new Gson() : gson;
@@ -44,7 +46,7 @@ public class ApiService {
     }
 
     // Konstruktor bezargumentowy na potrzeby testów, NIE używany przez Spring
-    public ApiService() {
+    ApiService() {
         this.httpClient = HttpClient.newHttpClient();
         this.gson = new Gson();
         this.defaultApiUrl = "";
