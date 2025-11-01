@@ -7,7 +7,7 @@ mvn clean test-compile exec:java
 
 ## Run Spring Boot application:
 ```java
-mvn -f pom.xml spring-boot:run -Dspring-boot.run.main-class=EmployeeManagementApplication
+mvn -f pom.xml spring-boot:run
 ```
 
 ## Run Unit tests:
