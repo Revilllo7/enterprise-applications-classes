@@ -1,4 +1,25 @@
 # HOW TO RUN?
+
+## Run main test:
+```java
+mvn clean test-compile exec:java
+``` 
+
+## Run Spring Boot application:
+```java
+mvn -f pom.xml spring-boot:run -Dspring-boot.run.main-class=EmployeeManagementApplication
+```
+
+## Run Unit tests:
+```java
+mvn -f pom.xml test
+```
+
+## Run tests with code coverage:
+```java
+mvn verify
+```
+
 ## TO RUN THE APPLICATION:
 ```java
 mvn clean compile exec:java

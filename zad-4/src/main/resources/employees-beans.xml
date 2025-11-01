@@ -8,18 +8,17 @@
            http://www.springframework.org/schema/util
            http://www.springframework.org/schema/util/spring-util.xsd">
     
-    <bean id="employee1" class="com.techcorp.employee.model.Employee">
-        <constructor-arg value="Jan"/>
-        <constructor-arg value="Kowalski"/>
+    <bean id="employee1" class="model.Employee">
+        <!-- Employee(String fullName, String email, String companyName, Position position, double salary) -->
+        <constructor-arg value="Jan Kowalski"/>
         <constructor-arg value="jan.kowalski@techcorp.com"/>
         <constructor-arg value="TechCorp"/>
         <constructor-arg value="MANAGER"/>
         <constructor-arg value="12500"/>
     </bean>
     
-    <bean id="employee2" class="com.techcorp.employee.model.Employee">
-        <constructor-arg value="Anna"/>
-        <constructor-arg value="Nowak"/>
+    <bean id="employee2" class="model.Employee">
+        <constructor-arg value="Anna Nowak"/>
         <constructor-arg value="anna.nowak@techcorp.com"/>
         <constructor-arg value="TechCorp"/>
         <constructor-arg value="PROGRAMISTA"/>
@@ -28,7 +27,7 @@
     
     <!-- Definicja kolejnych pracowników -->
     
-    <util:list id="xmlEmployees" value-type="com.techcorp.employee.model.Employee">
+    <util:list id="xmlEmployees" value-type="model.Employee">
         <ref bean="employee1"/>
         <ref bean="employee2"/>
         <!-- Referencje do kolejnych beanów pracowników -->
