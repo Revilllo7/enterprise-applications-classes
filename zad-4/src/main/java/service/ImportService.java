@@ -13,9 +13,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
+import org.springframework.stereotype.Service;
 
 // Import z CSV w trybie strumieniowym - bez wczytywania całego pliku do pamięci
 
+@Service
 public class ImportService {
     private final EmployeeService employeeService;
 

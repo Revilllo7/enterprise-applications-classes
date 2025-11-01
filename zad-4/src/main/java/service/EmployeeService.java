@@ -7,11 +7,13 @@ import model.CompanyStatistics;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Locale;
+import org.springframework.stereotype.Service;
 
 /**
  * Serwis przechowujący pracowników i udostępniający operacje analityczne.
  * Wszystkie operacje na kolekcjach wykonane przez Stream API.
  */
+@Service
 public class EmployeeService {
     private final Map<String, Employee> employeesByEmail = new HashMap<>();
 

@@ -1,18 +1,24 @@
 import model.Employee;
 import model.ImportSummary;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+import service.ApiService;
 import service.EmployeeService;
 import service.ImportService;
-import service.ApiService;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+@SpringBootApplication(scanBasePackages = {"service", "config"})
 public class Main {
     public static void main(String[] args) {
-        EmployeeService employeeService = new EmployeeService();
-        ImportService importService = new ImportService(employeeService);
-        ApiService apiService = new ApiService();
+        ApplicationContext context = SpringApplication.run(Main.class, args);
+
+        EmployeeService employeeService = context.getBean(EmployeeService.class);
+        ImportService importService = context.getBean(ImportService.class);
+        ApiService apiService = context.getBean(ApiService.class);
 
         try {
             // --- 1. Import z CSV ---
@@ -23,7 +29,7 @@ public class Main {
 
             // --- 2. Fetch z API ---
             System.out.println("\n=== Fetch from API ===");
-            List<Employee> apiEmployees = apiService.fetchEmployeesFromApi("https://jsonplaceholder.typicode.com/users");
+            List<Employee> apiEmployees = apiService.fetchEmployeesFromDefaultApi();
             apiEmployees.forEach(employeeService::addEmployee);
             System.out.println("Imported from API: " + apiEmployees.size());
 

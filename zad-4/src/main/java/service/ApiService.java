@@ -12,6 +12,8 @@ import java.util.List;
 
 import com.google.gson.*;
 import com.google.gson.JsonObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 /**
  * Pobiera pracowników z zewnętrznego API (jsonplaceholder.typicode.com/users) [10 INDEKSÓW]
@@ -22,16 +24,30 @@ import com.google.gson.JsonObject;
  * Dla JSON: wszystkim przypisuje stanowisko PROGRAMISTA i podstawową stawkę Programista.getBaseSalary()
  * Dla CSV: oczekuje wierszy (firstName,lastName,email,companyName,position,salary)
  */
+@Service
 public class ApiService {
     private final HttpClient httpClient;
+    private final Gson gson;
+    private final String defaultApiUrl;
 
-    public ApiService() {
-        this.httpClient = HttpClient.newHttpClient();
+    public ApiService(HttpClient httpClient, Gson gson, @Value("${app.api.url}") String defaultApiUrl) {
+        this.httpClient = (httpClient == null) ? HttpClient.newHttpClient() : httpClient;
+        this.gson = (gson == null) ? new Gson() : gson;
+        this.defaultApiUrl = (defaultApiUrl == null) ? "" : defaultApiUrl;
     }
 
     // Konstruktor do wstrzykiwania HttpClient (testowanie)
     ApiService(HttpClient httpClient) {
         this.httpClient = (httpClient == null) ? HttpClient.newHttpClient() : httpClient;
+        this.gson = new Gson();
+        this.defaultApiUrl = "";
+    }
+
+    // Konstruktor bezargumentowy na potrzeby testów, NIE używany przez Spring
+    public ApiService() {
+        this.httpClient = HttpClient.newHttpClient();
+        this.gson = new Gson();
+        this.defaultApiUrl = "";
     }
 
     /**
@@ -59,6 +75,14 @@ public class ApiService {
 
         String body = response.body();
         return parseBody(body);
+    }
+
+    // Ułatwienie: pobranie z domyślnego adresu z konfiguracji
+    public List<Employee> fetchEmployeesFromDefaultApi() throws ApiException {
+        if (defaultApiUrl == null || defaultApiUrl.isBlank()) {
+            throw new ApiException("Default API URL is not configured");
+        }
+        return fetchEmployeesFromApi(defaultApiUrl);
     }
 
     // testowalne bez HTTP
