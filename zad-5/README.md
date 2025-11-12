@@ -1,9 +1,9 @@
 # HOW TO RUN?
 
-## Run main test:
+## Run main application:
 ```java
-mvn clean test-compile exec:java
-``` 
+mvn -f pom.xml clean compile exec:java
+```
 
 ## Run Spring Boot application:
 ```java

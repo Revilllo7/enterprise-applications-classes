@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.9.3</junit.version>
         <gson.version>2.10.1</gson.version>
-        <exec.mainClass>Main</exec.mainClass>
+    <exec.mainClass>com.techcorp.employee.EmployeeManagementApplication</exec.mainClass>
     </properties>
 
     <dependencies>
@@ -120,7 +120,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.5.7</version>
                 <configuration>
-                    <mainClass>EmployeeManagementApplication</mainClass>
+                    <mainClass>com.techcorp.employee.EmployeeManagementApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>
