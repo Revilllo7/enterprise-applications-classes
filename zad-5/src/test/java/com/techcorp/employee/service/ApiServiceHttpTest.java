@@ -64,7 +64,7 @@ class ApiServiceHttpTest {
 
         when(mockResponse.statusCode()).thenReturn(200);
         when(mockResponse.body()).thenReturn("[{\"name\": \"John Doe\", \"email\": \"john@example.com\", \"company\": {\"name\": \"TechCorp\"}}]");
-        when(mockClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockResponse);
+        when(mockClient.<String>send(any(HttpRequest.class), org.mockito.Mockito.<HttpResponse.BodyHandler<String>>any())).thenReturn(mockResponse);
 
         ApiService svc = new ApiService(mockClient);
         List<Employee> list = svc.fetchEmployeesFromApi("http://dummy/json");
@@ -84,7 +84,7 @@ class ApiServiceHttpTest {
 
         when(mockResponse.statusCode()).thenReturn(200);
         when(mockResponse.body()).thenReturn("firstName,lastName,email,company,position,salary\nAnn,Test,ann@example.com,Acme,PROGRAMISTA,8000\n");
-        when(mockClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockResponse);
+        when(mockClient.<String>send(any(HttpRequest.class), org.mockito.Mockito.<HttpResponse.BodyHandler<String>>any())).thenReturn(mockResponse);
 
         ApiService svc = new ApiService(mockClient);
         List<Employee> list = svc.fetchEmployeesFromApi("http://dummy/csv");
@@ -100,7 +100,7 @@ class ApiServiceHttpTest {
 
         when(mockResponse.statusCode()).thenReturn(500);
         when(mockResponse.body()).thenReturn("oops");
-        when(mockClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockResponse);
+        when(mockClient.<String>send(any(HttpRequest.class), org.mockito.Mockito.<HttpResponse.BodyHandler<String>>any())).thenReturn(mockResponse);
 
         ApiService svc = new ApiService(mockClient);
         assertThrows(ApiException.class, () -> svc.fetchEmployeesFromApi("http://dummy/bad"));

@@ -4,11 +4,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.techcorp.employee.controller.EmployeeController;
+import com.techcorp.employee.config.AppConfig;
 import com.techcorp.employee.model.Employee;
 import com.techcorp.employee.model.EmploymentStatus;
 import com.techcorp.employee.model.Position;
@@ -19,13 +20,13 @@ import org.springframework.boot.test.context.TestConfiguration;
 import java.util.List;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(EmployeeController.class)
+@Import(AppConfig.class)
 class EmployeeControllerTest {
 
     @TestConfiguration
@@ -34,7 +35,7 @@ class EmployeeControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private EmployeeService employeeService;
 
     private Employee sampleEmployee() {
@@ -49,7 +50,7 @@ class EmployeeControllerTest {
 
         mockMvc.perform(get("/api/employees").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON)))
                 .andExpect(jsonPath("$[0].email").value("jan@example.com"))
                 .andExpect(jsonPath("$[0].firstName").value("Jan"));
     }
@@ -94,10 +95,15 @@ class EmployeeControllerTest {
                 "}";
 
         mockMvc.perform(post("/api/employees")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
                         .content(payload))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", containsString("/api/employees/jan@example.com")))
+                .andExpect(result -> {
+                    String loc = result.getResponse().getHeader("Location");
+                    if (loc == null || !loc.contains("/api/employees/jan@example.com")) {
+                        throw new AssertionError("Location header missing or incorrect: " + loc);
+                    }
+                })
                 .andExpect(jsonPath("$.email").value("jan@example.com"));
     }
 
@@ -116,7 +122,7 @@ class EmployeeControllerTest {
                 "}";
 
         mockMvc.perform(post("/api/employees")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
                         .content(payload))
                 .andExpect(status().isConflict());
     }
@@ -146,7 +152,6 @@ class EmployeeControllerTest {
     @Test
     @DisplayName("PATCH update status returns 200 and updated employee")
     void patchStatus() throws Exception {
-        Employee e = sampleEmployee();
         Employee updated = new Employee("Jan Kowalski", "jan@example.com", "TechCorp", Position.PROGRAMISTA, 8000.0);
         updated.setStatus(EmploymentStatus.ON_LEAVE);
 
@@ -156,7 +161,7 @@ class EmployeeControllerTest {
         String payload = "{\"status\":\"ON_LEAVE\"}";
 
         mockMvc.perform(patch("/api/employees/jan@example.com/status")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON))
                         .content(payload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ON_LEAVE"));

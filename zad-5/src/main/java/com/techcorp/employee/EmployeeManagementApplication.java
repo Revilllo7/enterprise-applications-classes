@@ -58,7 +58,8 @@ public class EmployeeManagementApplication {
         public void run(String... args) throws Exception {
             // Import from CSV (path from application.properties, loaded from classpath)
             System.out.println("=== CSV Import ===");
-            Path csvPath = new ClassPathResource(csvFileName).getFile().toPath();
+            String csvFile = java.util.Objects.requireNonNull(csvFileName, "app.import.csv-file must be set");
+            Path csvPath = new ClassPathResource(csvFile).getFile().toPath();
             ImportSummary summary = importService.importFromCsv(csvPath, 0);
             System.out.println(summary);
 

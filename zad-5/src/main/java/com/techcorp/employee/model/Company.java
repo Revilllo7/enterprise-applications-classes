@@ -54,7 +54,11 @@ public class Company {
     }
 
     public Map<Position, Integer> countEmployeesByPosition() {
-        return employees.stream().collect(Collectors.groupingBy(Employee::getPosition, Collectors.reducing(0, employee -> 1, Integer::sum)));
+        // Use counting() then convert to Integer to avoid unchecked boxing warnings
+        return employees.stream().collect(Collectors.groupingBy(
+                Employee::getPosition,
+                Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+        ));
     }
 
     public Double averageSalary() {

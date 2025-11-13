@@ -94,9 +94,10 @@ public class ApiService {
         // Najpierw spróbuj JSON array
         JsonElement root = null;
         try {
-            root = JsonParser.parseString(body);
+            // Use the injected Gson instance to parse JSON
+            root = gson.fromJson(body, JsonElement.class);
         } catch (JsonSyntaxException ignored) {
-            // jeśli nieprawidłowy to się nie wywalaj
+            // if invalid JSON, don't throw. CSV parsing below
         }
 
         List<Employee> result = new ArrayList<>();
