@@ -13,6 +13,30 @@ import java.time.Instant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<ErrorResponse> handleFileStorage(FileStorageException ex, WebRequest req) {
+        String path = req.getDescription(false);
+        if (path != null && path.startsWith("uri=")) path = path.substring(4);
+        ErrorResponse err = new ErrorResponse(ex.getMessage(), Instant.now(), HttpStatus.INTERNAL_SERVER_ERROR.value(), path);
+        return new ResponseEntity<>(err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFile(InvalidFileException ex, WebRequest req) {
+        String path = req.getDescription(false);
+        if (path != null && path.startsWith("uri=")) path = path.substring(4);
+        ErrorResponse err = new ErrorResponse(ex.getMessage(), Instant.now(), HttpStatus.BAD_REQUEST.value(), path);
+        return new ResponseEntity<>(err, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleFileNotFound(FileNotFoundException ex, WebRequest req) {
+        String path = req.getDescription(false);
+        if (path != null && path.startsWith("uri=")) path = path.substring(4);
+        ErrorResponse err = new ErrorResponse(ex.getMessage(), Instant.now(), HttpStatus.NOT_FOUND.value(), path);
+        return new ResponseEntity<>(err, HttpStatus.NOT_FOUND);
+    }
 
     @ExceptionHandler(EmployeeNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(EmployeeNotFoundException ex, WebRequest req) {

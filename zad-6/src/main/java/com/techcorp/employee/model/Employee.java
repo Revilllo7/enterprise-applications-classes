@@ -11,6 +11,7 @@ public class Employee {
     private Position position;
     private double salary;
     private EmploymentStatus status;
+    private String photoFileName;
 
     public Employee(String fullName, String email, String companyName, Position position, double salary) {
         this.fullName = fullName;
@@ -19,7 +20,14 @@ public class Employee {
         this.position = position;
         this.salary = salary;
         this.status = EmploymentStatus.ACTIVE;
+        this.photoFileName = null;
     }
+
+    
+
+    public String getPhotoFileName() { return photoFileName; }
+
+    public void setPhotoFileName(String photoFileName) { this.photoFileName = photoFileName; }
 
     public EmploymentStatus getStatus() { return status; }
 
