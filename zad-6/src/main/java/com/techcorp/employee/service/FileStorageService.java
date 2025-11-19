@@ -36,20 +36,27 @@ public class FileStorageService {
         }
     }
     
+    public java.nio.file.Path getFilePath(String fileName) {
+        return this.fileStorageLocation.resolve(fileName).normalize();
+    }
+    
     public String storeFile(MultipartFile file) {
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
             throw new InvalidFileException("File name is null or empty");
         }
         originalFileName = StringUtils.cleanPath(originalFileName);
+        
         try {
             if (originalFileName.contains("..")) {
                 throw new InvalidFileException("Invalid path sequence in file name: " + originalFileName);
+            
             }
             String fileExtension = "";
             int dotIndex = originalFileName.lastIndexOf('.');
             if (dotIndex > 0) {
                 fileExtension = originalFileName.substring(dotIndex);
+            
             }
             String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
             Path targetLocation = this.fileStorageLocation.resolve(uniqueFileName);
@@ -62,12 +69,14 @@ public class FileStorageService {
             validateFile(file, this.maxFileSize, new String[]{"jpg", "jpeg", "png", "gif", "pdf"});
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING); // Fuck your duplicate UUID
             return uniqueFileName;
+
     } catch (IOException exception) {
             throw new FileStorageException("Could not store file " + originalFileName + ". Please try again!", exception);
         }
     }
 
     public Resource loadFileAsResource(String fileName) {
+        
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
             java.net.URI uri = filePath.toUri();
@@ -76,6 +85,7 @@ public class FileStorageService {
                 return resource;
             } else {
                 throw new FileNotFoundException("File not found " + fileName);
+            
             }
         } catch (MalformedURLException exception) {
             throw new FileNotFoundException("File not found " + fileName, exception);
@@ -87,8 +97,10 @@ public class FileStorageService {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
+            
             } else {
                 throw new FileNotFoundException("File not found " + fileName);
+            
             }
         } catch (IOException exception) {
             throw new FileStorageException("Could not delete file " + fileName + ". Please try again!", exception);
@@ -98,11 +110,14 @@ public class FileStorageService {
     public void validateFile(MultipartFile file, long maxFileSize, String[] allowedExtensions) {
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
-            throw new InvalidFileException("File name is null or empty");
+            deleteFile(originalFileName);
+            throw new InvalidFileException("File name was null or empty, deleted.");
         }
 
         if (file.isEmpty() || file.getSize() == 0) {
-            throw new InvalidFileException("File is empty");
+            // reject empty file
+            deleteFile(originalFileName);
+            throw new InvalidFileException("File was empty, deleted.");
         }
 
         originalFileName = StringUtils.cleanPath(originalFileName);
