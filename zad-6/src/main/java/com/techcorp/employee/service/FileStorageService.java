@@ -1,8 +1,3 @@
-
-// Należy utworzyć serwis FileStorageService z adnotacją @Service, który będzie odpowiedzialny za operacje na plikach. Serwis powinien enkapsulować logikę zapisywania plików na dysku, generowania unikalnych nazw plików aby uniknąć konfliktów, walidacji typów i rozmiarów plików oraz obsługi błędów związanych z operacjami na systemie plików.
-
-// Serwis powinien oferować metody do zapisywania pliku przyjmującego obiekt MultipartFile i zwracającego nazwę zapisanego pliku, metodę do odczytywania pliku z dysku zwracającą obiekt Resource, metodę do usuwania pliku oraz metodę walidującą czy plik spełnia wymagania dotyczące rozszerzenia i rozmiaru. Ścieżki do katalogów powinny być wstrzykiwane z application.properties używając adnotacji @Value.
-
 package com.techcorp.employee.service;
 import com.techcorp.employee.exception.FileStorageException;
 import com.techcorp.employee.exception.FileNotFoundException;
@@ -12,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -19,21 +15,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.UUID;
+
 @Service
 public class FileStorageService {
     private final Path fileStorageLocation;
-    @Value("${app.upload.directory}")
-    public FileStorageService(String uploadDir) {
-        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+    private final long maxFileSize;
+
+    public FileStorageService(@Value("${app.upload.directory}") String uploadDirectory,
+                              @Value("${spring.servlet.multipart.max-file-size}") String maxFileSizeString) {
+        this.fileStorageLocation = Paths.get(uploadDirectory).toAbsolutePath().normalize();
+        // parse max file size from application.properties
+        String maxFileSizeNonNull = Objects.requireNonNull(maxFileSizeString, "spring.servlet.multipart.max-file-size must not be null");
+        this.maxFileSize = DataSize.parse(maxFileSizeNonNull).toBytes();
         try {
             Files.createDirectories(this.fileStorageLocation);
-        } catch (Exception ex) {
-            throw new FileStorageException("Could not create the directory where the uploaded files will be stored.", ex);
+        } catch (Exception exception) {
+            throw new FileStorageException("Could not create the directory where the uploaded files will be stored.", exception);
         }
     }
+    
     public String storeFile(MultipartFile file) {
-        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            throw new InvalidFileException("File name is null or empty");
+        }
+        originalFileName = StringUtils.cleanPath(originalFileName);
         try {
             if (originalFileName.contains("..")) {
                 throw new InvalidFileException("Invalid path sequence in file name: " + originalFileName);
@@ -45,43 +53,67 @@ public class FileStorageService {
             }
             String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
             Path targetLocation = this.fileStorageLocation.resolve(uniqueFileName);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            // This should never happen with UUID
+            // If it does... lol
+            if (Files.exists(targetLocation)) {
+                throw new FileStorageException("File with the same name already exists?: " + uniqueFileName + " it's getting replaced lol");
+            }
+            
+            validateFile(file, this.maxFileSize, new String[]{"jpg", "jpeg", "png", "gif", "pdf"});
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING); // Fuck your duplicate UUID
             return uniqueFileName;
-        } catch (IOException ex) {
-            throw new FileStorageException("Could not store file " + originalFileName + ". Please try again!", ex);
+    } catch (IOException exception) {
+            throw new FileStorageException("Could not store file " + originalFileName + ". Please try again!", exception);
         }
     }
+
     public Resource loadFileAsResource(String fileName) {
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
+            java.net.URI uri = filePath.toUri();
+            Resource resource = new UrlResource(Objects.requireNonNull(uri));
             if (resource.exists()) {
                 return resource;
             } else {
                 throw new FileNotFoundException("File not found " + fileName);
             }
-        } catch (MalformedURLException ex) {
-            throw new FileNotFoundException("File not found " + fileName, ex);
+        } catch (MalformedURLException exception) {
+            throw new FileNotFoundException("File not found " + fileName, exception);
         }
     }
+    
     public void deleteFile(String fileName) {
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
-            Files.deleteIfExists(filePath);
-        } catch (IOException ex) {
-            throw new FileStorageException("Could not delete file " + fileName + ". Please try again!", ex);
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+            } else {
+                throw new FileNotFoundException("File not found " + fileName);
+            }
+        } catch (IOException exception) {
+            throw new FileStorageException("Could not delete file " + fileName + ". Please try again!", exception);
         }
     }
+
     public void validateFile(MultipartFile file, long maxFileSize, String[] allowedExtensions) {
-        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            throw new InvalidFileException("File name is null or empty");
+        }
+
+        if (file.isEmpty() || file.getSize() == 0) {
+            throw new InvalidFileException("File is empty");
+        }
+
+        originalFileName = StringUtils.cleanPath(originalFileName);
         String fileExtension = "";
         int dotIndex = originalFileName.lastIndexOf('.');
         if (dotIndex > 0) {
             fileExtension = originalFileName.substring(dotIndex + 1).toLowerCase();
         }
         boolean isExtensionAllowed = false;
-        for (String ext : allowedExtensions) {
-            if (fileExtension.equals(ext.toLowerCase())) {
+        for (String extension : allowedExtensions) {
+            if (fileExtension.equals(extension.toLowerCase())) {
                 isExtensionAllowed = true;
                 break;
             }
@@ -92,5 +124,6 @@ public class FileStorageService {
         if (file.getSize() > maxFileSize) {
             throw new InvalidFileException("File size exceeds the maximum limit of " + maxFileSize + " bytes");
         }
+
     }
 }
