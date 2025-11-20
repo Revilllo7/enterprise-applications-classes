@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import com.techcorp.employee.service.ReportGeneratorService;
 import com.techcorp.employee.service.EmployeeDocumentService;
 import com.techcorp.employee.model.EmployeeDocument;
-import com.techcorp.employee.model.DocumentType;
 import java.net.URI;
 
 @RestController
@@ -107,12 +106,79 @@ public class FileUploadController {
         }
     }
 
+    @PostMapping("/photos/{email}")
+    public ResponseEntity<?> uploadPhoto(@PathVariable("email") String email,
+                                         @RequestParam("file") MultipartFile file) {
+        try {
+            // validate employee exists
+            var empOpt = employeeService.findByEmail(email);
+            if (empOpt.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Employee not found");
+
+            // validate image: jpg/png, max 2MB
+            long maxSize = 2L * 1024L * 1024L;
+            String[] imgAllowed = new String[]{"jpg", "jpeg", "png"};
+            fileStorageService.validateFile(file, maxSize, imgAllowed);
+
+            String original = file.getOriginalFilename();
+            String ext = "";
+            if (original != null) {
+                int dot = original.lastIndexOf('.');
+                if (dot > -1) ext = original.substring(dot);
+            }
+
+            String safeEmail = email.replaceAll("[^A-Za-z0-9@._-]", "_");
+            String desired = safeEmail + ext.toLowerCase();
+
+            String relative = fileStorageService.storeFileWithNameInSubDirectory(file, "photos", desired);
+
+            // update employee
+            var emp = empOpt.get();
+            emp.setPhotoFileName(relative);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(URI.create(String.format("/api/files/photos/%s", email)));
+            return ResponseEntity.status(HttpStatus.CREATED).headers(headers).body(emp);
+
+        } catch (InvalidFileException ife) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ife.getMessage());
+        } catch (com.techcorp.employee.exception.FileStorageException fse) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(fse.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/photos/{email}")
+    public ResponseEntity<Resource> getPhoto(@PathVariable("email") String email) {
+        var empOpt = employeeService.findByEmail(email);
+        if (empOpt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        var emp = empOpt.get();
+        String photoPath = emp.getPhotoFileName();
+        if (photoPath == null || photoPath.isBlank()) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        try {
+            Resource resource = fileStorageService.loadFileAsResource(photoPath);
+            java.nio.file.Path p = fileStorageService.getFilePath(photoPath);
+            String contentType = java.nio.file.Files.probeContentType(p);
+            if (contentType == null) contentType = "application/octet-stream";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_TYPE, contentType);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + p.getFileName().toString() + "\"");
+            return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength()).body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @PostMapping("/documents/{email}")
     public ResponseEntity<?> uploadDocument(@PathVariable("email") String email,
                                             @RequestParam("file") MultipartFile file,
-                                            @RequestParam("type") DocumentType type) {
+                                            @RequestParam("type") String type) {
         try {
-            var doc = employeeDocumentService.storeDocument(email, file, type);
+            // Accept type as String to avoid binding/conversion errors. Convert to domain object here.
+            com.techcorp.employee.model.DocumentType docType = new com.techcorp.employee.model.DocumentType();
+            var doc = employeeDocumentService.storeDocument(email, file, docType);
             HttpHeaders headers = new HttpHeaders();
             headers.setLocation(URI.create(String.format("/api/files/documents/%s/%d", email, doc.getId())));
             return ResponseEntity.status(HttpStatus.CREATED).headers(headers).body(doc);
@@ -161,8 +227,8 @@ public class FileUploadController {
     public ResponseEntity<ImportSummary> importCsv(@RequestParam("file") MultipartFile file) {
         try {
             fileStorageService.validateFile(file, maxFileSize.toBytes(), CSV_ALLOWED);
-            String fileName = fileStorageService.storeFile(file);
-            String fullPath = fileStorageService.getFilePath(fileName).toString();
+            String relative = fileStorageService.storeFileInSubDirectory(file, "imports");
+            String fullPath = fileStorageService.getFilePath(relative).toString();
             ImportSummary summary = importService.importCsv(fullPath);
             return ResponseEntity.ok(summary);
         
@@ -181,8 +247,8 @@ public class FileUploadController {
     public ResponseEntity<ImportSummary> importXml(@RequestParam("file") MultipartFile file) {
         try {
             fileStorageService.validateFile(file, maxFileSize.toBytes(), XML_ALLOWED);
-            String fileName = fileStorageService.storeFile(file);
-            String fullPath = fileStorageService.getFilePath(fileName).toString();
+            String relative = fileStorageService.storeFileInSubDirectory(file, "imports");
+            String fullPath = fileStorageService.getFilePath(relative).toString();
             ImportSummary summary = importService.importXml(fullPath);
             return ResponseEntity.ok(summary);
 

@@ -71,6 +71,31 @@ public class FileStorageService {
             throw new FileStorageException("Could not store file " + originalFileName + ". Please try again!", ex);
         }
     }
+
+    /**
+     * Store file into a subdirectory under the configured storage location using a specific filename.
+     * Returns the relative path (subdir/filename) stored.
+     */
+    public String storeFileWithNameInSubDirectory(MultipartFile file, String subDir, String desiredFileName) {
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            throw new InvalidFileException("File name is null or empty");
+        }
+        String cleanDesired = StringUtils.cleanPath(desiredFileName);
+        try {
+            if (cleanDesired.contains("..")) {
+                throw new InvalidFileException("Invalid path sequence in file name: " + cleanDesired);
+            }
+            java.nio.file.Path dirPath = this.fileStorageLocation.resolve(subDir).toAbsolutePath().normalize();
+            Files.createDirectories(dirPath);
+            Path targetLocation = dirPath.resolve(cleanDesired);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            java.nio.file.Path relative = this.fileStorageLocation.relativize(targetLocation);
+            return relative.toString().replace('\\', '/');
+        } catch (IOException ex) {
+            throw new FileStorageException("Could not store file " + originalFileName + ". Please try again!", ex);
+        }
+    }
     
     public String storeFile(MultipartFile file) {
         String originalFileName = file.getOriginalFilename();

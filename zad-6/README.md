@@ -24,6 +24,42 @@ mvn test
 ```bash
 mvn verify
 ```
+# File Upload Examples
+## Upload CSV file for import:
+```bash
+url -X POST http://localhost:8080/api/files/import/csv \
+  -F "file=@employees.csv"
+```
+
+## Download report CSV file:
+```bash
+curl http://localhost:8080/api/files/export/csv \
+  --output employees_export.csv
+```
+
+## Upload employee document:
+```bash
+curl -X POST http://localhost:8080/api/files/documents/jan.kowalski@example.com \
+  -F "file=@contract.pdf" \
+  -F "type=CONTRACT"
+```
+
+## Upload employee document:
+```bash
+curl http://localhost:8080/api/files/documents/jan.kowalski@example.com
+```
+
+## Upload employee photo:
+```bash
+curl -X POST http://localhost:8080/api/files/photos/jan.kowalski@example.com \
+  -F "file=@photo.jpg"
+```
+
+## Download employee photo:
+```bash
+curl http://localhost:8080/api/files/photos/jan.kowalski@example.com \
+  --output photo.jpg
+```
 
 # REST Endpoints
 
@@ -162,5 +198,5 @@ Statistics endpoints (`/api/statistics`):
 ---
 
 ## Code Coverage Report
-Zad-5 code coverage report: ![coverage report showing 68% coverage](markdown/coverage-report.png)
+Zad-6 code coverage report: ![coverage report showing 68% coverage](markdown/coverage-report.png)
 
