@@ -29,6 +29,23 @@ mvn verify
 
 Base URL: `http://localhost:8080`
 
+Report generation endpoint (`/api/reports`):
+- GET generate PDF report:
+
+	```bash
+	curl -s -o reports/statistics_DataSoft.pdf http://localhost:8080/api/files/reports/statistics/DataSoft
+	```
+
+	Response: 200 OK with `application/pdf` content.
+
+- Download CSV file:
+	```bash
+	curl http://localhost:8080/api/files/export/csv \
+--output employees_export.csv
+	```
+
+	Response: 200 OK with `text/csv` content.
+
 Employee management endpoints (`/api/employees`):
 
 - GET all employees (optional company filter):

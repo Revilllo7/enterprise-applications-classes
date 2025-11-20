@@ -39,6 +39,38 @@ public class FileStorageService {
     public java.nio.file.Path getFilePath(String fileName) {
         return this.fileStorageLocation.resolve(fileName).normalize();
     }
+
+    /**
+     * Store file into a subdirectory under the configured storage location.
+     * Returns the relative path (subdir/uniqueFileName) stored.
+     */
+    public String storeFileInSubDirectory(MultipartFile file, String subDir) {
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            throw new InvalidFileException("File name is null or empty");
+        }
+        originalFileName = StringUtils.cleanPath(originalFileName);
+        try {
+            if (originalFileName.contains("..")) {
+                throw new InvalidFileException("Invalid path sequence in file name: " + originalFileName);
+            }
+            String fileExtension = "";
+            int dotIndex = originalFileName.lastIndexOf('.');
+            if (dotIndex > 0) {
+                fileExtension = originalFileName.substring(dotIndex);
+            }
+            String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
+            java.nio.file.Path dirPath = this.fileStorageLocation.resolve(subDir).toAbsolutePath().normalize();
+            Files.createDirectories(dirPath);
+            Path targetLocation = dirPath.resolve(uniqueFileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            // return path relative to storage root
+            java.nio.file.Path relative = this.fileStorageLocation.relativize(targetLocation);
+            return relative.toString().replace('\\', '/');
+        } catch (IOException ex) {
+            throw new FileStorageException("Could not store file " + originalFileName + ". Please try again!", ex);
+        }
+    }
     
     public String storeFile(MultipartFile file) {
         String originalFileName = file.getOriginalFilename();

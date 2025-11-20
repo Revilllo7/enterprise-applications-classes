@@ -23,8 +23,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.techcorp.employee.service.EmployeeService;
 import com.techcorp.employee.model.Employee;
+import com.techcorp.employee.exception.InvalidDataException;
+import com.techcorp.employee.exception.FileNotFoundException;
+import org.springframework.web.bind.annotation.DeleteMapping;
  
 import com.techcorp.employee.service.ReportGeneratorService;
+import com.techcorp.employee.service.EmployeeDocumentService;
+import com.techcorp.employee.model.EmployeeDocument;
+import com.techcorp.employee.model.DocumentType;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/files")
@@ -34,6 +41,7 @@ public class FileUploadController {
     private final ImportService importService;
     private final EmployeeService employeeService;
     private final ReportGeneratorService reportGeneratorService;
+    private final EmployeeDocumentService employeeDocumentService;
 
     @Value("${spring.servlet.multipart.max-file-size}")
     private DataSize maxFileSize;
@@ -41,11 +49,12 @@ public class FileUploadController {
     private static final String[] XML_ALLOWED = new String[]{"xml"};
 
     @Autowired
-    public FileUploadController(FileStorageService fileStorageService, ImportService importService, EmployeeService employeeService, ReportGeneratorService reportGeneratorService) {
+    public FileUploadController(FileStorageService fileStorageService, ImportService importService, EmployeeService employeeService, ReportGeneratorService reportGeneratorService, EmployeeDocumentService employeeDocumentService) {
         this.fileStorageService = fileStorageService;
         this.importService = importService;
         this.employeeService = employeeService;
         this.reportGeneratorService = reportGeneratorService;
+        this.employeeDocumentService = employeeDocumentService;
     }
 
     @GetMapping("/export/csv")
@@ -95,6 +104,56 @@ public class FileUploadController {
             return ResponseEntity.ok().headers(headers).contentLength(pdfBytes.length).body(resource);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/documents/{email}")
+    public ResponseEntity<?> uploadDocument(@PathVariable("email") String email,
+                                            @RequestParam("file") MultipartFile file,
+                                            @RequestParam("type") DocumentType type) {
+        try {
+            var doc = employeeDocumentService.storeDocument(email, file, type);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(URI.create(String.format("/api/files/documents/%s/%d", email, doc.getId())));
+            return ResponseEntity.status(HttpStatus.CREATED).headers(headers).body(doc);
+        } catch (InvalidDataException ide) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ImportSummary(0, List.of(ide.getMessage())));
+        } catch (IOException ioe) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/documents/{email}")
+    public ResponseEntity<List<EmployeeDocument>> listDocuments(@PathVariable("email") String email) {
+        return ResponseEntity.ok(employeeDocumentService.listDocuments(email));
+    }
+
+    @GetMapping("/documents/{email}/{documentId}")
+    public ResponseEntity<Resource> downloadDocument(@PathVariable("email") String email, @PathVariable("documentId") long documentId) {
+        try {
+            EmployeeDocument doc = employeeDocumentService.getDocument(email, documentId);
+            Resource resource = fileStorageService.loadFileAsResource(doc.getFilePath());
+            String contentType = java.nio.file.Files.probeContentType(fileStorageService.getFilePath(doc.getFilePath()));
+            if (contentType == null) contentType = "application/octet-stream";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_TYPE, contentType);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + doc.getOriginalFileName() + "\"");
+            return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength()).body(resource);
+        } catch (FileNotFoundException fnf) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (IOException ioe) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/documents/{email}/{documentId}")
+    public ResponseEntity<Void> deleteDocument(@PathVariable("email") String email, @PathVariable("documentId") long documentId) {
+        try {
+            employeeDocumentService.deleteDocument(email, documentId);
+            return ResponseEntity.noContent().build();
+        } catch (FileNotFoundException fnf) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
