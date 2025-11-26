@@ -12,6 +12,7 @@ public class Employee {
     private double salary;
     private EmploymentStatus status;
     private String photoFileName;
+    private Long departmentId;
 
     public Employee(String fullName, String email, String companyName, Position position, double salary) {
         this.fullName = fullName;
@@ -36,6 +37,7 @@ public class Employee {
     public String getFullName() { return fullName; }
     public String getEmail() { return email; }
     public String getCompanyName() { return companyName; }
+    public Long getDepartmentId() { return departmentId; }
     public Position getPosition() { return position; }
     public double getSalary() { return salary; }
 
@@ -47,6 +49,8 @@ public class Employee {
         }
         this.salary = position.getSalary();
     }
+
+    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
 
     @Override
     public boolean equals(Object object) {
