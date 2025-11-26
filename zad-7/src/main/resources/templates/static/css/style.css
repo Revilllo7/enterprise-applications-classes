@@ -1,0 +1,111 @@
+:root{
+  --max-width: 980px;
+  --accent: #2b6cb0;
+  --muted: #666;
+  --success: #2f855a;
+  --error: #e53e3e;
+  --bg: #f7fafc;
+}
+
+body{
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:#111;
+}
+
+.container{
+  max-width: var(--max-width);
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.main-nav{
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  padding:10px 16px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.main-nav a{
+  color:var(--accent);
+  text-decoration:none;
+  font-weight:600;
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  margin-top:12px;
+  box-shadow:0 0 0 1px rgba(0,0,0,0.03);
+}
+
+.table th, .table td{
+  padding:10px 12px;
+  border-bottom:1px solid #edf2f7;
+  text-align:left;
+}
+
+.table tbody tr:hover{
+  background:#f1f5f9;
+}
+
+form{
+  background:#fff;
+  padding:12px;
+  border:1px solid #e2e8f0;
+  border-radius:6px;
+}
+
+input[type="text"], input[type="email"], select, textarea{
+  width:100%;
+  padding:8px 10px;
+  border:1px solid #cbd5e0;
+  border-radius:4px;
+  box-sizing:border-box;
+  margin-top:6px;
+  margin-bottom:10px;
+  background:#fff;
+}
+
+button, .btn{
+  background:var(--accent);
+  color:#fff;
+  padding:8px 12px;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+button.secondary{
+  background:#e2e8f0;
+  color:#111;
+}
+
+.message{
+  padding:10px 12px;
+  border-radius:4px;
+  margin:10px 0;
+}
+
+.success{
+  background:#e6fffa;
+  border:1px solid rgba(47,133,90,0.2);
+  color:var(--success);
+}
+
+.error{
+  background:#fff5f5;
+  border:1px solid rgba(229,62,62,0.15);
+  color:var(--error);
+}
+
+.muted{
+  color:var(--muted);
+  font-size:0.9rem;
+  padding:8px 0;
+}

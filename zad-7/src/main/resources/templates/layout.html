@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="baseHead(title)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${title}">Enterprise App</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<header th:fragment="header">
+    <nav class="main-nav">
+        <a th:href="@{/employees}">Pracownicy</a>
+        <a th:href="@{/departments}">Departamenty</a>
+        <a th:href="@{/statistics}">Statystyki</a>
+        <a th:href="@{/files}">Pliki</a>
+    </nav>
+</header>
+
+<main th:fragment="content">
+    <!-- Główna sekcja, w widokach wstawiaj zawartość tutaj -->
+</main>
+
+<footer th:fragment="footer">
+    <div class="container muted">© 2025</div>
+</footer>
+</body>
+</html>

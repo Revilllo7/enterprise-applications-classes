@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Departamenty')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1>Departamenty</h1>
+
+        <a class="btn" th:href="@{/departments/add}">Dodaj Departament</a>
+
+        <table class="table">
+            <thead>
+                <tr><th>Nazwa</th><th>Lokalizacja</th><th>Budżet</th><th>Manager</th><th>Akcje</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="d : ${departments}">
+                    <td th:text="${d.name}">Dział</td>
+                    <td th:text="${d.location}">Lokalizacja</td>
+                    <td th:text="${#numbers.formatDecimal(d.budget, 0, 'COMMA', 2, 'POINT')}">0.00</td>
+                    <td th:text="${managerNames[d.id]}">Brak</td>
+                    <td>
+                        <a th:href="@{|/departments/${d.id}|}">Szczegóły</a>
+                        <a th:href="@{/departments/edit/{id}(id=${d.id})}">Edytuj</a>
+                        <a th:href="@{/departments/delete/{id}(id=${d.id})}" th:onclick="return confirm('Czy na pewno chcesz usunąć ten departament?');">Usuń</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>

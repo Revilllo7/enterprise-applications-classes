@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Import Pracowników')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1>Import Pracowników</h1>
+        <form action="#" method="post" enctype="multipart/form-data">
+            <div>
+                <label for="file">Wybierz plik do importu:</label>
+                <input type="file" id="file" name="file" required />
+            </div>
+            <button type="submit">Importuj</button>
+        </form>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>
