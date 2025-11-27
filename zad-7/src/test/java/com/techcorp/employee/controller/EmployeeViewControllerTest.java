@@ -20,12 +20,16 @@ import static org.mockito.Mockito.when;
 class EmployeeViewControllerTest {
 
     EmployeeService employeeService;
+    com.techcorp.employee.service.FileStorageService fileStorageService;
+    com.techcorp.employee.service.ImportService importService;
     EmployeeViewController controller;
 
     @BeforeEach
     void setUp() {
         employeeService = Mockito.mock(EmployeeService.class);
-        controller = new EmployeeViewController(employeeService);
+        fileStorageService = Mockito.mock(com.techcorp.employee.service.FileStorageService.class);
+        importService = Mockito.mock(com.techcorp.employee.service.ImportService.class);
+        controller = new EmployeeViewController(employeeService, fileStorageService, importService);
     }
 
     @Test
@@ -56,7 +60,9 @@ class EmployeeViewControllerTest {
         when(employeeService.addEmployee(any())).thenReturn(true);
 
         var flash = new RedirectAttributesModelMap();
-        String rv = controller.addEmployee(dto, flash);
+        var model = new ConcurrentModel();
+        var binding = new org.springframework.validation.BeanPropertyBindingResult(dto, "employee");
+        String rv = controller.addEmployee(dto, binding, model, flash);
         assertEquals("redirect:/employees", rv);
         assertTrue(flash.getFlashAttributes().containsKey("message"));
     }
@@ -81,7 +87,9 @@ class EmployeeViewControllerTest {
         when(employeeService.updateEmployee(any(), any())).thenReturn(Optional.of(new Employee("Jane Doe","jane@x.com","Co",Position.PROGRAMISTA,8000)));
 
         var flash = new RedirectAttributesModelMap();
-        String rv = controller.editEmployee(dto, flash);
+        var model = new ConcurrentModel();
+        var binding = new org.springframework.validation.BeanPropertyBindingResult(dto, "employee");
+        String rv = controller.editEmployee(dto, binding, model, flash);
         assertEquals("redirect:/employees", rv);
         assertTrue(flash.getFlashAttributes().containsKey("message"));
     }

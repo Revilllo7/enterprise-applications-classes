@@ -148,6 +148,25 @@ public class FileStorageService {
             throw new FileNotFoundException("File not found " + fileName, exception);
         }
     }
+
+    /**
+     * List file names (not paths) located in a subdirectory under storage root.
+     * Returns an empty list if directory does not exist or contains no files.
+     */
+    public java.util.List<String> listFilesInSubDirectory(String subDir) {
+        try {
+            java.nio.file.Path dirPath = this.fileStorageLocation.resolve(subDir).normalize();
+            if (!Files.exists(dirPath) || !Files.isDirectory(dirPath)) return java.util.List.of();
+            try (java.util.stream.Stream<java.nio.file.Path> stream = Files.list(dirPath)) {
+                return stream.filter(p -> Files.isRegularFile(p))
+                        .map(p -> p.getFileName().toString())
+                        .sorted()
+                        .toList();
+            }
+        } catch (IOException e) {
+            throw new FileStorageException("Could not list files in directory: " + subDir, e);
+        }
+    }
     
     public void deleteFile(String fileName) {
         try {

@@ -3,6 +3,8 @@ package com.techcorp.employee.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -10,6 +12,11 @@ import com.techcorp.employee.model.Employee;
 import com.techcorp.employee.model.Position;
 import com.techcorp.employee.model.EmploymentStatus;
 import com.techcorp.employee.service.EmployeeService;
+import com.techcorp.employee.service.FileStorageService;
+import com.techcorp.employee.service.ImportService;
+import com.techcorp.employee.model.ImportSummary;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
 import com.techcorp.employee.dto.EmployeeDTO;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,15 +26,26 @@ import java.util.stream.Collectors;
 public class EmployeeViewController {
 
 	private final EmployeeService employeeService;
+	private final FileStorageService fileStorageService;
+	private final ImportService importService;
+
+	@Value("${spring.servlet.multipart.max-file-size:10MB}")
+	private String maxFileSizeStr;
+
+	private static final String[] CSV_ALLOWED = new String[]{"csv"};
+	private static final String[] XML_ALLOWED = new String[]{"xml"};
 
 	@Autowired
-	public EmployeeViewController(EmployeeService employeeService) {
+	public EmployeeViewController(EmployeeService employeeService, FileStorageService fileStorageService, ImportService importService) {
 		this.employeeService = employeeService;
+		this.fileStorageService = fileStorageService;
+		this.importService = importService;
 	}
 
 	@GetMapping
 	public String listEmployees(Model model) {
-		model.addAttribute("employees", employeeService.getAllEmployees());
+		var dtos = employeeService.getAllEmployees().stream().map(this::toDto).collect(Collectors.toList());
+		model.addAttribute("employees", dtos);
 		return "employees/list";
 	}
 
@@ -40,7 +58,12 @@ public class EmployeeViewController {
 	}
 
 	@PostMapping("/add")
-	public String addEmployee(@ModelAttribute EmployeeDTO dto, RedirectAttributes redirectAttributes) {
+	public String addEmployee(@Valid @ModelAttribute("employee") EmployeeDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("positions", Position.values());
+			model.addAttribute("statuses", EmploymentStatus.values());
+			return "employees/add-form";
+		}
 		Employee toCreate = dtoToEmployee(dto, dto.getEmail());
 		boolean created = employeeService.addEmployee(toCreate);
 		if (created) {
@@ -52,7 +75,7 @@ public class EmployeeViewController {
 	}
 
 	@GetMapping("/edit/{email}")
-	public String showEditForm(@PathVariable String email, Model model, RedirectAttributes redirectAttributes) {
+	public String showEditForm(@PathVariable("email") String email, Model model, RedirectAttributes redirectAttributes) {
 		Employee employee = employeeService.findByEmail(email).orElse(null);
 		if (employee == null) {
 			redirectAttributes.addFlashAttribute("error", "Pracownik nie znaleziony");
@@ -65,7 +88,12 @@ public class EmployeeViewController {
 	}
 
 	@PostMapping("/edit")
-	public String editEmployee(@ModelAttribute EmployeeDTO dto, RedirectAttributes redirectAttributes) {
+	public String editEmployee(@Valid @ModelAttribute("employee") EmployeeDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("positions", Position.values());
+			model.addAttribute("statuses", EmploymentStatus.values());
+			return "employees/edit-form";
+		}
 		Employee updated = dtoToEmployee(dto, dto.getEmail());
 		var result = employeeService.updateEmployee(dto.getEmail(), updated);
 		if (result.isPresent()) {
@@ -77,7 +105,7 @@ public class EmployeeViewController {
 	}
 
 	@GetMapping("/delete/{email}")
-	public String deleteEmployee(@PathVariable String email, RedirectAttributes redirectAttributes) {
+	public String deleteEmployee(@PathVariable("email") String email, RedirectAttributes redirectAttributes) {
 		boolean removed = employeeService.removeEmployee(email);
 		if (removed) {
 			redirectAttributes.addFlashAttribute("message", "Pracownik usunięty");
@@ -92,11 +120,47 @@ public class EmployeeViewController {
 		return "employees/search-form";
 	}
 
+	@GetMapping("/import")
+	public String showImportForm(Model model) {
+		model.addAttribute("fileTypes", List.of("csv", "xml"));
+		return "employees/import-form";
+	}
+
+	@PostMapping("/import")
+	public String importFile(@RequestParam("file") MultipartFile file,
+							 @RequestParam("fileType") String fileType,
+							 RedirectAttributes redirectAttributes) {
+		try {
+			long maxBytes = org.springframework.util.unit.DataSize.parse(java.util.Objects.requireNonNull(maxFileSizeStr)).toBytes();
+			if ("csv".equalsIgnoreCase(fileType)) {
+				fileStorageService.validateFile(file, maxBytes, CSV_ALLOWED);
+				String relative = fileStorageService.storeFileInSubDirectory(file, "imports");
+				String fullPath = fileStorageService.getFilePath(relative).toString();
+				ImportSummary summary = importService.importCsv(fullPath);
+				redirectAttributes.addFlashAttribute("message", "Import zakończony: " + summary.importedCount() + " rekordów, błędy: " + summary.getFailedCount());
+				redirectAttributes.addFlashAttribute("importSummary", summary);
+			} else if ("xml".equalsIgnoreCase(fileType)) {
+				fileStorageService.validateFile(file, maxBytes, XML_ALLOWED);
+				String relative = fileStorageService.storeFileInSubDirectory(file, "imports");
+				String fullPath = fileStorageService.getFilePath(relative).toString();
+				ImportSummary summary = importService.importXml(fullPath);
+				redirectAttributes.addFlashAttribute("message", "Import zakończony: " + summary.importedCount() + " rekordów, błędy: " + summary.getFailedCount());
+				redirectAttributes.addFlashAttribute("importSummary", summary);
+			} else {
+				redirectAttributes.addFlashAttribute("error", "Nieobsługiwany typ pliku: " + fileType);
+			}
+		} catch (Exception ex) {
+			redirectAttributes.addFlashAttribute("error", "Błąd podczas importu: " + ex.getMessage());
+		}
+		return "redirect:/employees";
+	}
+
 	@PostMapping("/search")
 	public String searchByCompany(@RequestParam("company") String company, Model model) {
-		List<Employee> matches = employeeService.getAllEmployees().stream()
-				.filter(e -> company == null || company.isBlank() || (e.getCompanyName() != null && e.getCompanyName().equalsIgnoreCase(company.trim())))
-				.collect(Collectors.toList());
+		var matches = employeeService.getAllEmployees().stream()
+			.filter(e -> company == null || company.isBlank() || (e.getCompanyName() != null && e.getCompanyName().equalsIgnoreCase(company.trim())))
+			.map(this::toDto)
+			.collect(Collectors.toList());
 		model.addAttribute("employees", matches);
 		model.addAttribute("query", company);
 		return "employees/search-results";

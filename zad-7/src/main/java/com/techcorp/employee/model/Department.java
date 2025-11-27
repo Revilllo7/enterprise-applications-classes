@@ -1,12 +1,20 @@
 package com.techcorp.employee.model;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 
 public class Department {
 	private Long id;
+
+	@NotBlank(message = "Nazwa departamentu jest wymagana")
 	private String name;
+
 	private String location;
+
+	@DecimalMin(value = "0.0", message = "Budżet musi być nieujemny")
 	private double budget;
+
 	private String managerEmail;
 
 	public Department() {

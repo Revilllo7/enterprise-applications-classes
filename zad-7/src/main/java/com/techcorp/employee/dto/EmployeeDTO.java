@@ -1,5 +1,10 @@
 package com.techcorp.employee.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class EmployeeDTO {
 	private String firstName;
 	private String lastName;
@@ -23,13 +28,14 @@ public class EmployeeDTO {
 		this.status = status;
 	}
 
+	@NotBlank(message = "Imię jest wymagane")
 	public String getFirstName() { 
-        return firstName; 
-    }
+	    return firstName; 
+	}
 
 	public void setFirstName(String firstName) { 
-        this.firstName = firstName; 
-    }
+	    this.firstName = firstName; 
+	}
 
 	public String getLastName() { 
         return lastName; 
@@ -39,13 +45,15 @@ public class EmployeeDTO {
         this.lastName = lastName; 
     }
 
+	@NotBlank(message = "Email jest wymagany")
+	@Email(message = "Nieprawidłowy format email")
 	public String getEmail() { 
-        return email; 
-    }
+	    return email; 
+	}
 
 	public void setEmail(String email) { 
-        this.email = email; 
-    }
+	    this.email = email; 
+	}
 
 	public String getCompany() { 
         return company; 
@@ -63,13 +71,14 @@ public class EmployeeDTO {
         this.position = position; 
     }
 
+	@Min(value = 0, message = "Wynagrodzenie nie może być ujemne")
 	public double getSalary() { 
-        return salary; 
-    }
+	    return salary; 
+	}
 
 	public void setSalary(double salary) { 
-        this.salary = salary; 
-    }
+	    this.salary = salary; 
+	}
 
 	public String getStatus() { 
         return status; 
