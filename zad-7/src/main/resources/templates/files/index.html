@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Pliki')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1>Pliki</h1>
+        <p>Interfejs plików (linki do API):</p>
+        <ul>
+            <li><a th:href="@{/api/files/export/csv}">Pobierz CSV (wszystkie)</a></li>
+            <li><a th:href="@{/employees/import}">Formularz importu (CSV / XML)</a></li>
+            <li>
+                <form id="reportForm" onsubmit="return generateReport()" style="display:inline-block">
+                    <label for="companySelect">Generuj raport PDF dla firmy:</label>
+                    <select id="companySelect" name="company">
+                        <option value="">-- wybierz firmę --</option>
+                        <option th:each="c : ${companies}" th:value="${c}" th:text="${c}"></option>
+                    </select>
+                    <button type="submit">Generuj</button>
+                </form>
+            </li>
+        </ul>
+    </main>
+
+    <script>
+        function generateReport() {
+            const sel = document.getElementById('companySelect');
+            const company = sel.value;
+            if (!company) {
+                alert('Wybierz firmę aby wygenerować raport');
+                return false;
+            }
+            // encode company name for URL and redirect to report endpoint
+            const url = '/api/files/reports/statistics/' + encodeURIComponent(company);
+            window.location.href = url;
+            return false;
+        }
+    </script>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>

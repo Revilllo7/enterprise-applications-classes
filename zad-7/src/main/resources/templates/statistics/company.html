@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Statystyki firmy')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1 th:text="'Statystyki: ' + ${companyName}">Statystyki firmy</h1>
+
+        <section>
+            <h2>Podsumowanie</h2>
+            <p>Liczba pracowników: <strong th:text="${stats.employeeCount}">0</strong></p>
+            <p>Średnie wynagrodzenie: <strong th:text="${#numbers.formatDecimal(stats.averageSalary,0,'COMMA',2,'POINT')}">0.00</strong></p>
+            <p>Najwyżej opłacony: <strong th:text="${stats.highestPaidFullName}">-</strong></p>
+        </section>
+
+        <section>
+            <h2>Lista pracowników</h2>
+            <table class="table">
+                <thead>
+                    <tr><th>Imię</th><th>Nazwisko</th><th>Stanowisko</th><th>Wynagrodzenie</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="e : ${employees}">
+                        <td th:text="${#strings.split(e.fullName,' ')[0]}">Imię</td>
+                        <td th:text="${#lists.size(#strings.split(e.fullName,' ')) > 1 ? #strings.split(e.fullName,' ')[1] : ''}">Nazwisko</td>
+                        <td th:text="${e.position}">Stanowisko</td>
+                        <td th:text="${#numbers.formatDecimal(e.salary,0,'COMMA',2,'POINT')}">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <a th:href="@{/statistics}">Powrót do statystyk</a>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>

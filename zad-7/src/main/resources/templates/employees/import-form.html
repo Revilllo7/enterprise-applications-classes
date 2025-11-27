@@ -6,10 +6,17 @@
 
     <main class="container">
         <h1>Import Pracowników</h1>
-        <form action="#" method="post" enctype="multipart/form-data">
+        <form th:action="@{/employees/import}" method="post" enctype="multipart/form-data">
             <div>
                 <label for="file">Wybierz plik do importu:</label>
                 <input type="file" id="file" name="file" required />
+            </div>
+            <div>
+                <label for="fileType">Typ pliku:</label>
+                <select id="fileType" name="fileType">
+                    <option value="csv">CSV</option>
+                    <option value="xml">XML</option>
+                </select>
             </div>
             <button type="submit">Importuj</button>
         </form>
