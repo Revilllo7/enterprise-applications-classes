@@ -1,5 +1,12 @@
 # How to run?
 
+## Open application in web browser:
+```bash
+mvn -DskipTests=true spring-boot:run
+# then open
+http://localhost:8080
+```
+
 ## Run main application:
 ```bash
 mvn -DskipTests=true spring-boot:run
@@ -198,5 +205,13 @@ Statistics endpoints (`/api/statistics`):
 ---
 
 ## Code Coverage Report
-Zad-6 code coverage report: ![coverage report showing 68% coverage](markdown/coverage-report.png)
+Zad-7 code coverage report: ![coverage report showing 59% coverage](markdown/coverage-report.png)
 
+## Page with Thymeleaf templates
+homepage: ![main webpage](markdown/main.png)
+employee page: ![employee webpage](markdown/employees.png)
+employee add page: ![add employee webpage](markdown/employees-add.png)
+employee import page: ![import employee webpage](markdown/employees-import.png)
+departments page: ![departments webpage](markdown/departments.png)
+statistics page: ![statistics webpage](markdown/statistics.png)
+files page: ![file webpage](markdown/files.png)
