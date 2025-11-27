@@ -21,13 +21,15 @@ class DepartmentViewControllerTest {
 
     DepartmentService deptSvc;
     EmployeeService empSvc;
+    com.techcorp.employee.service.FileStorageService fileStorageService;
     DepartmentViewController controller;
 
     @BeforeEach
     void setUp() {
         deptSvc = Mockito.mock(DepartmentService.class);
         empSvc = Mockito.mock(EmployeeService.class);
-        controller = new DepartmentViewController(deptSvc, empSvc);
+        fileStorageService = Mockito.mock(com.techcorp.employee.service.FileStorageService.class);
+        controller = new DepartmentViewController(deptSvc, empSvc, fileStorageService);
     }
 
     @Test
@@ -67,7 +69,9 @@ class DepartmentViewControllerTest {
         when(deptSvc.addDepartment(any())).thenReturn(dept);
 
         var flash = new RedirectAttributesModelMap();
-        String rv = controller.saveDepartment(dept, flash);
+        var model = new ConcurrentModel();
+        var binding = new org.springframework.validation.BeanPropertyBindingResult(dept, "department");
+        String rv = controller.saveDepartment(dept, binding, model, flash);
         assertEquals("redirect:/departments", rv);
         assertTrue(flash.getFlashAttributes().containsKey("message"));
     }
