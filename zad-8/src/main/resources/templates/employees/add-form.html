@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Dodaj Pracownika')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1>Dodaj Pracownika</h1>
+        <form th:action="@{/employees/add}" th:object="${employee}" method="post">
+            <label for="firstName">Imię:</label>
+            <input type="text" id="firstName" th:field="*{firstName}" required />
+
+            <label for="lastName">Nazwisko:</label>
+            <input type="text" id="lastName" th:field="*{lastName}" />
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" th:field="*{email}" required />
+
+            <label for="company">Firma:</label>
+            <input type="text" id="company" th:field="*{company}" />
+
+            <label for="position">Stanowisko:</label>
+            <select id="position" th:field="*{position}">
+                <option value="">Wybierz stanowisko</option>
+                <option th:each="pos : ${positions}" th:value="${pos.name()}" th:text="${pos.name()}"></option>
+            </select>
+
+            <label for="salary">Wynagrodzenie:</label>
+            <input type="number" step="0.01" id="salary" th:field="*{salary}" />
+
+            <label for="status">Status:</label>
+            <select id="status" th:field="*{status}">
+                <option value="">Wybierz status</option>
+                <option th:each="st : ${statuses}" th:value="${st.name()}" th:text="${st.name()}"></option>
+            </select>
+
+            <div>
+                <button type="submit">Dodaj Pracownika</button>
+                <a th:href="@{/employees}">Anuluj</a>
+            </div>
+        </form>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>

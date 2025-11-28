@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Dokumenty Departamentu')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1 th:text="${department.name}">Dokumenty Departamentu</h1>
+
+        <div th:if="${message}" class="message success" th:text="${message}"></div>
+        <div th:if="${error}" class="message error" th:text="${error}"></div>
+
+        <h2>Prześlij nowy plik</h2>
+        <form th:action="@{/departments/documents/{id}(id=${department.id})}" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" required />
+            <button type="submit">Wyślij</button>
+        </form>
+
+        <h2>Istniejące pliki</h2>
+        <div th:if="${#lists.isEmpty(files)}">Brak plików</div>
+        <ul>
+            <li th:each="f : ${files}">
+                <span th:text="${f}">plik.pdf</span>
+                &nbsp;(<a th:href="@{/departments/documents/{id}/download/{file}(id=${department.id},file=${f})}">Pobierz</a>)
+            </li>
+        </ul>
+
+        <a th:href="@{/departments}">Powrót do listy departamentów</a>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>

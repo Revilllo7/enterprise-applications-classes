@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Formularz Departamentu')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1 th:text="${department.id != null} ? 'Edytuj Departament' : 'Dodaj Departament'"></h1>
+        <form th:action="@{/departments}" th:object="${department}" method="post">
+            <input type="hidden" th:if="${department.id != null}" th:field="*{id}" />
+            <div>
+                <label for="name">Nazwa:</label>
+                <input type="text" id="name" th:field="*{name}" required />
+            </div>
+            <div>
+                <label for="location">Lokalizacja:</label>
+                <input type="text" id="location" th:field="*{location}" />
+            </div>
+            <div>
+                <label for="budget">Budżet:</label>
+                <input type="number" step="0.01" id="budget" th:field="*{budget}" />
+            </div>
+            <div>
+                <label for="manager">Manager:</label>
+                <select id="manager" th:field="*{managerEmail}">
+                    <option value="">Brak</option>
+                    <option th:each="m : ${managers}" th:value="${m.email}" th:text="${m.fullName}"></option>
+                </select>
+            </div>
+            <div>
+                <button type="submit">Zapisz</button>
+                <a th:href="@{/departments}">Anuluj</a>
+            </div>
+        </form>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>
