@@ -117,7 +117,7 @@ public class ApiService {
 
                 Position position = Position.PROGRAMISTA;
                 double salary = position.getSalary();
-                Employee emp = new Employee(fullName, email, companyName, position, salary);
+                Employee emp = new Employee(null, fullName, email, companyName, position, salary);
                 result.add(emp);
             }
             return result;
@@ -169,7 +169,7 @@ public class ApiService {
                 }
             }
 
-            Employee employee = new Employee(fullName, email, companyName, position, salary);
+            Employee employee = new Employee(null, fullName, email, companyName, position, salary);
             result.add(employee);
         }
 

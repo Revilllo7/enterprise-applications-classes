@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public class Employee {
+    private final Long id;
     private final String fullName; //fullname ze względu na Indonezję </3
     private final String email;
     String companyName;
@@ -14,7 +15,8 @@ public class Employee {
     private String photoFileName;
     private Long departmentId;
 
-    public Employee(String fullName, String email, String companyName, Position position, double salary) {
+    public Employee(Long id, String fullName, String email, String companyName, Position position, double salary) {
+        this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.companyName = companyName;
@@ -22,6 +24,11 @@ public class Employee {
         this.salary = salary;
         this.status = EmploymentStatus.ACTIVE;
         this.photoFileName = null;
+    }
+
+    // Backwards-compatible constructor - sets id to null
+    public Employee(String fullName, String email, String companyName, Position position, double salary) {
+        this(null, fullName, email, companyName, position, salary);
     }
 
     
@@ -34,6 +41,7 @@ public class Employee {
 
     public void setStatus(EmploymentStatus status) { this.status = status == null ? EmploymentStatus.ACTIVE : status; }
 
+    public Long getId() { return id; }
     public String getFullName() { return fullName; }
     public String getEmail() { return email; }
     public String getCompanyName() { return companyName; }

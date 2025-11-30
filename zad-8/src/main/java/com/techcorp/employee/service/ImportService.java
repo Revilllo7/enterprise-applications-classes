@@ -125,7 +125,7 @@ public class ImportService {
                             }
 
                             validateEmployeeData(fullName, email.trim(), company.trim(), position, salary);
-                            Employee employee = new Employee(fullName, email.trim(), company.trim(), position, salary);
+                            Employee employee = new Employee(null, fullName, email.trim(), company.trim(), position, salary);
                             boolean added = employeeService.addEmployee(employee);
                             if (added) imported.incrementAndGet();
                             else errors.add("Employee " + current + ": duplicate email '" + email + "'");
@@ -202,7 +202,7 @@ public class ImportService {
                         try {
                             // walidacja np: ujemna pensja, duplikowany email
                             validateEmployeeData(fullName, email, company, position, salary);
-                            Employee empployee = new Employee(fullName, email, company, position, salary);
+                            Employee empployee = new Employee(null, fullName, email, company, position, salary);
                             boolean added = employeeService.addEmployee(empployee);
                             if (added) imported.incrementAndGet();
                             else errors.add("Line " + current + ": duplicate email '" + email + "'");

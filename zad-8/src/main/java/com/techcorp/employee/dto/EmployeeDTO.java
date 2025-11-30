@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class EmployeeDTO {
+	private Long id;
 	private String firstName;
 	private String lastName;
 	private String email;
@@ -18,7 +19,8 @@ public class EmployeeDTO {
 
     }
 
-	public EmployeeDTO(String firstName, String lastName, String email, String company, String position, double salary, String status) {
+	public EmployeeDTO(Long id, String firstName, String lastName, String email, String company, String position, double salary, String status) {
+		this.id = id;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
@@ -27,6 +29,14 @@ public class EmployeeDTO {
 		this.salary = salary;
 		this.status = status;
 	}
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
 	@NotBlank(message = "Imię jest wymagane")
 	public String getFirstName() { 

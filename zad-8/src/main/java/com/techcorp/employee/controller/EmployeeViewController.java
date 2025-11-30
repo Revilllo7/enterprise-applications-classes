@@ -181,6 +181,7 @@ public class EmployeeViewController {
 			}
 		}
 		EmployeeDTO dto = new EmployeeDTO();
+        dto.setId(e.getId());
 		dto.setFirstName(first);
 		dto.setLastName(last);
 		dto.setEmail(e.getEmail());
@@ -207,7 +208,7 @@ public class EmployeeViewController {
 			}
 		}
 		double salary = dto.getSalary();
-		com.techcorp.employee.model.Employee emp = new Employee(fullName, email, company, position, salary);
+		com.techcorp.employee.model.Employee emp = new com.techcorp.employee.model.Employee(dto.getId(), fullName, email, company, position, salary);
 		if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
 			try {
 				emp.setStatus(EmploymentStatus.valueOf(dto.getStatus().trim().toUpperCase()));

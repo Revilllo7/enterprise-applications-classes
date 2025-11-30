@@ -73,7 +73,7 @@ public class EmployeeService {
         Position newPosition = updated.getPosition();
         double newSalary = updated.getSalary();
 
-        Employee replacement = new Employee(newFullName, existing.getEmail(), newCompany, newPosition, newSalary);
+        Employee replacement = new Employee(existing.getId(), newFullName, existing.getEmail(), newCompany, newPosition, newSalary);
         employeesByEmail.put(key, replacement);
         return Optional.of(replacement);
     }

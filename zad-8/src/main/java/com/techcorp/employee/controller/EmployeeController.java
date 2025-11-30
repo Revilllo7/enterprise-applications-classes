@@ -142,6 +142,7 @@ public class EmployeeController {
 			}
 		}
 		EmployeeDTO dto = new EmployeeDTO();
+        dto.setId(e.getId());
 		dto.setFirstName(first);
 		dto.setLastName(last);
 		dto.setEmail(e.getEmail());
@@ -168,7 +169,7 @@ public class EmployeeController {
 			}
 		}
 		double salary = dto.getSalary();
-		Employee emp = new Employee(fullName, email, company, position, salary);
+		Employee emp = new Employee(dto.getId(), fullName, email, company, position, salary);
 		if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
 			try {
 				emp.setStatus(EmploymentStatus.valueOf(dto.getStatus().trim().toUpperCase()));
