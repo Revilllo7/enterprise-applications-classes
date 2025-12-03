@@ -3,27 +3,28 @@ package com.techcorp.employee.dao;
 import com.techcorp.employee.model.Employee;
 import com.techcorp.employee.model.Position;
 import com.techcorp.employee.model.EmploymentStatus;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-import javax.sql.DataSource;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@JdbcTest(properties = "spring.sql.init.mode=never")
 public class JdbcEmployeeDAOTest {
-	private JdbcEmployeeDAO dao;
+	@Autowired
 	private JdbcTemplate jdbcTemplate;
+
+	private JdbcEmployeeDAO dao;
 
 	@BeforeEach
 	void setUp() {
-		DataSource ds = new DriverManagerDataSource("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
-		jdbcTemplate = new JdbcTemplate(ds);
-		// create table
+		// create table for tests
 		jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS employees (" +
 				"id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
 				"first_name VARCHAR(50), " +
@@ -39,11 +40,6 @@ public class JdbcEmployeeDAOTest {
 		dao = new JdbcEmployeeDAO(jdbcTemplate);
 	}
 
-	@AfterEach
-	void tearDown() {
-		jdbcTemplate.execute("DROP TABLE IF EXISTS employees");
-	}
-
 	@Test
 	void insertAndFindByEmail() {
 		Employee e = new Employee(null, "M A", "m@example.com", "Co", Position.PROGRAMISTA, 8000);
@@ -55,6 +51,7 @@ public class JdbcEmployeeDAOTest {
 		assertEquals("m@example.com", f.getEmail());
 		assertEquals(Position.PROGRAMISTA, f.getPosition());
 		assertEquals(8000, f.getSalary());
+		assertNotNull(f.getId());
 	}
 
 	@Test
@@ -125,6 +122,56 @@ public class JdbcEmployeeDAOTest {
 		assertNotNull(nullCo);
 		assertEquals(1, nullCo.getEmployeeCount());
 		assertEquals(3000, nullCo.getAverageSalary(), 0.1);
+	}
+
+	@Test
+	void invalidEnumValuesMapToDefaults() {
+		// insert a row with invalid position and status via direct SQL
+		jdbcTemplate.update("INSERT INTO employees(first_name,last_name,email,salary,position,company,status) VALUES (?,?,?,?,?,?,?)",
+				"X","Y","bad@example.com",1000.0,"NOT_A_POSITION","Comp","NOT_A_STATUS");
+		Optional<Employee> e = dao.findByEmail("bad@example.com");
+		assertTrue(e.isPresent());
+		assertNull(e.get().getPosition());
+		assertEquals(EmploymentStatus.ACTIVE, e.get().getStatus());
+	}
+
+	@Test
+	void nullFieldsArePersistedAndReadBack() {
+		Employee e = new Employee(null, "Null Co", "null@example.com", null, null, 0.0);
+		dao.save(e);
+		Optional<Employee> found = dao.findByEmail("null@example.com");
+		assertTrue(found.isPresent());
+		assertNull(found.get().getPosition());
+		assertNull(found.get().getCompanyName());
+		assertNull(found.get().getPhotoFileName());
+		assertNull(found.get().getDepartmentId());
+	}
+
+	@Test
+	void duplicateEmailThrowsConstraintViolation() {
+		dao.save(new Employee(null, "Dup", "dup@example.com", "C", Position.PROGRAMISTA, 5000));
+		// second insert with same email should throw DataAccessException
+		assertThrows(DataAccessException.class, () -> jdbcTemplate.update(
+				"INSERT INTO employees(first_name,last_name,email,salary) VALUES (?,?,?,?)",
+				"Dup2","D","dup@example.com",4000.0));
+	}
+
+	@Test
+	void getCompanyStatisticsEmptyTableReturnsEmptyList() {
+		// ensure table empty
+		dao.deleteAll();
+		List<com.techcorp.employee.model.CompanyStatistics> stats = dao.getCompanyStatistics();
+		assertTrue(stats.isEmpty());
+	}
+
+	@Test
+	void deterministicTopEarnerSelection() {
+		dao.save(new Employee(null, "Top One", "t1@co.com", "CoX", Position.PROGRAMISTA, 7000));
+		dao.save(new Employee(null, "Top Two", "t2@co.com", "CoX", Position.PREZES, 25000));
+		List<com.techcorp.employee.model.CompanyStatistics> stats = dao.getCompanyStatistics();
+		com.techcorp.employee.model.CompanyStatistics cs = stats.stream().filter(s -> "CoX".equals(s.getCompanyName())).findFirst().orElse(null);
+		assertNotNull(cs);
+		assertEquals("Top Two", cs.getHighestPaidFullName());
 	}
 }
 
