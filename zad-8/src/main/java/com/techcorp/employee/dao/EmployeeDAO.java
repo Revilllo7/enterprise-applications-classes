@@ -15,4 +15,6 @@ public interface EmployeeDAO {
 	void delete(String email);
 
 	void deleteAll();
+
+	java.util.List<com.techcorp.employee.model.CompanyStatistics> getCompanyStatistics();
 }

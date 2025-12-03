@@ -60,6 +60,26 @@ public class EmployeeService {
         public void deleteAll() {
             map.clear();
         }
+
+        @Override
+        public java.util.List<com.techcorp.employee.model.CompanyStatistics> getCompanyStatistics() {
+            Map<String, List<Employee>> grouped = map.values().stream()
+                    .collect(Collectors.groupingBy(employee -> {
+                        String company = employee.getCompanyName();
+                        return (company == null || company.trim().isBlank()) ? "unknown" : company.trim();
+                    }));
+
+            List<com.techcorp.employee.model.CompanyStatistics> result = new ArrayList<>();
+            for (Map.Entry<String, List<Employee>> entry : grouped.entrySet()) {
+                String company = entry.getKey();
+                List<Employee> list = entry.getValue();
+                int count = list.size();
+                double avg = list.stream().mapToDouble(Employee::getSalary).average().orElse(0.0);
+                String highest = list.stream().max(Comparator.comparingDouble(Employee::getSalary)).map(Employee::getFullName).orElse("");
+                result.add(new com.techcorp.employee.model.CompanyStatistics(company, count, avg, highest));
+            }
+            return result;
+        }
     }
 
     public boolean addEmployee(Employee employee) {
@@ -145,27 +165,14 @@ public class EmployeeService {
 
     // tworzy mapę statystyk firmy (nazwa firmy -> statystyki)
     public Map<String, CompanyStatistics> getCompanyStatistics() {
-        // grupowanie po nazwie firmy bez zmiany oryginalnego zapisu (trimowane)
-        Map<String, List<Employee>> grouped = dao.findAll().stream()
-                .collect(Collectors.groupingBy(employee -> {
-                    String company = employee.getCompanyName();
-                    return (company == null) ? "unknown" : company.trim();
-                }));
-
-        return grouped.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> {
-                            List<Employee> list = entry.getValue();
-                            int count = list.size();
-                            double avgSalary = list.stream().mapToDouble(Employee::getSalary).average().orElse(0.0);
-                            String highest = list.stream()
-                                    .max(Comparator.comparingDouble(Employee::getSalary))
-                                    .map(Employee::getFullName)
-                                    .orElse("");
-                            return new CompanyStatistics(count, avgSalary, highest);
-                        }
-                ));
+        List<CompanyStatistics> stats = dao.getCompanyStatistics();
+        Map<String, CompanyStatistics> map = new HashMap<>();
+        for (CompanyStatistics cs : stats) {
+            String name = cs.getCompanyName();
+            if (name == null || name.isBlank()) name = "unknown";
+            map.put(name, cs);
+        }
+        return map;
     }
 
     // raport w formacie "Imię Nazwisko (email): aktualne_wynagrodzenie < bazowe_wynagrodzenie"

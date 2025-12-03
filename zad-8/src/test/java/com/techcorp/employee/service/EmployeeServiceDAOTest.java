@@ -75,4 +75,20 @@ public class EmployeeServiceDAOTest {
         assertEquals(1, after.size());
         assertEquals("n1@example.com", after.get(0).getEmail());
     }
+
+    @Test
+    void companyStatisticsMappingUnknownCompany() {
+        EmployeeService service = new EmployeeService();
+        // one employee with null company, one with blank company, one with normal company
+        service.addEmployee(new Employee(null, "X", "x@a.com", null, Position.PROGRAMISTA, 8000));
+        service.addEmployee(new Employee(null, "Y", "y@a.com", "  ", Position.MANAGER, 12000));
+        service.addEmployee(new Employee(null, "Z", "z@a.com", "Tech", Position.PREZES, 25000));
+
+        var stats = service.getCompanyStatistics();
+        // null and blank company should be mapped to "unknown"
+        assertTrue(stats.containsKey("unknown"));
+        assertTrue(stats.containsKey("Tech"));
+        assertEquals(2, stats.get("unknown").getEmployeeCount());
+        assertEquals(1, stats.get("Tech").getEmployeeCount());
+    }
 }

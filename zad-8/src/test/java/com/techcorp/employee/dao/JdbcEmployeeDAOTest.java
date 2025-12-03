@@ -95,5 +95,36 @@ public class JdbcEmployeeDAOTest {
 		dao.deleteAll();
 		assertEquals(0, dao.findAll().size());
 	}
+
+	@Test
+	void companyStatisticsAggregationAndTopEarner() {
+		// company C1: three employees, two with top salary tie
+		dao.save(new Employee(null, "John Doe", "john@c1.com", "C1", Position.PROGRAMISTA, 8000));
+		dao.save(new Employee(null, "Jane Roe", "jane@c1.com", "C1", Position.MANAGER, 12000));
+		dao.save(new Employee(null, "Joe Bloggs", "joe@c1.com", "C1", Position.MANAGER, 12000));
+
+		// employee with null company
+		dao.save(new Employee(null, "No Co", "noco@example.com", null, Position.STAZYSTA, 3000));
+
+		List<com.techcorp.employee.model.CompanyStatistics> stats = dao.getCompanyStatistics();
+		// find C1 stats
+		com.techcorp.employee.model.CompanyStatistics c1 = stats.stream()
+				.filter(s -> "C1".equals(s.getCompanyName()))
+				.findFirst().orElse(null);
+		assertNotNull(c1);
+		assertEquals(3, c1.getEmployeeCount());
+		// avg = (8000 + 12000 + 12000) / 3 = 10666.666...
+		assertEquals((8000 + 12000 + 12000) / 3.0, c1.getAverageSalary(), 0.1);
+		// top salary should be 12000 and name should be one of the two top earners
+		assertTrue(c1.getHighestPaidFullName().contains("Jane") || c1.getHighestPaidFullName().contains("Joe"));
+
+		// find null-company stats (companyName may be null)
+		com.techcorp.employee.model.CompanyStatistics nullCo = stats.stream()
+				.filter(s -> s.getCompanyName() == null)
+				.findFirst().orElse(null);
+		assertNotNull(nullCo);
+		assertEquals(1, nullCo.getEmployeeCount());
+		assertEquals(3000, nullCo.getAverageSalary(), 0.1);
+	}
 }
 

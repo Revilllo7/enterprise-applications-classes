@@ -153,4 +153,20 @@ public class JdbcEmployeeDAO implements EmployeeDAO {
 	public void deleteAll() {
 		jdbcTemplate.update("DELETE FROM employees");
 	}
+
+	@Override
+	public List<com.techcorp.employee.model.CompanyStatistics> getCompanyStatistics() {
+		String sql = "SELECT e.company AS company, COUNT(*) AS cnt, AVG(e.salary) AS avg_salary, MAX(e.salary) AS max_salary, " +
+				"(SELECT CONCAT(x.first_name, ' ', x.last_name) FROM employees x WHERE x.company = e.company ORDER BY x.salary DESC LIMIT 1) AS top_name " +
+				"FROM employees e GROUP BY e.company";
+
+		return jdbcTemplate.query(sql, (rs, rowNum) -> {
+			String company = rs.getString("company");
+			int count = rs.getInt("cnt");
+			double avg = rs.getDouble("avg_salary");
+			String top = rs.getString("top_name");
+			if (top == null) top = "";
+			return new com.techcorp.employee.model.CompanyStatistics(company, count, avg, top);
+		});
+	}
 }
