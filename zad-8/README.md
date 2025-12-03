@@ -31,6 +31,17 @@ mvn test
 ```bash
 mvn verify
 ```
+
+# Connect to h2 database console
+```bash
+http://localhost:8080/h2-console
+JDBC URL: jdbc:h2:mem:testdb
+User Name: sa
+Password: password
+```
+
+![h2 database console](markdown/h2-console.png)
+
 # File Upload Examples
 ## Upload CSV file for import:
 ```bash

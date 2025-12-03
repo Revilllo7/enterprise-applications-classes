@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS employees
     position VARCHAR(100),
     company VARCHAR(100),
     status VARCHAR(20) DEFAULT 'ACTIVE',
-    department_id BIGINT foreign key references departments(id),
+    department_id BIGINT,
     photo_file_name VARCHAR(255)
 );
