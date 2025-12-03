@@ -4,7 +4,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Locale;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.techcorp.employee.dao.EmployeeDAO;
 import com.techcorp.employee.model.CompanyStatistics;
 import com.techcorp.employee.model.Employee;
 import com.techcorp.employee.model.Position;
@@ -15,28 +17,71 @@ import com.techcorp.employee.model.Position;
  */
 @Service
 public class EmployeeService {
-    private final Map<String, Employee> employeesByEmail = new HashMap<>();
+    private final EmployeeDAO dao;
+    public EmployeeService(EmployeeDAO dao) {
+        this.dao = dao;
+    }
+
+    // No-arg constructor kept for tests and simple usage without Spring context.
+    // Uses an in-memory DAO that mimics previous behavior.
+    public EmployeeService() {
+        this.dao = new InMemoryEmployeeDAO();
+    }
+
+    // Simple in-memory DAO used by tests when no DAO is provided.
+    // Cause I can't be bothered re-writing all the tests
+    static class InMemoryEmployeeDAO implements EmployeeDAO {
+        private final Map<String, Employee> map = new HashMap<>();
+
+        @Override
+        public List<Employee> findAll() {
+            return new ArrayList<>(map.values());
+        }
+
+        @Override
+        public Optional<Employee> findByEmail(String email) {
+            if (email == null) return Optional.empty();
+            return Optional.ofNullable(map.get(email.toLowerCase(Locale.ROOT)));
+        }
+
+        @Override
+        public void save(Employee employee) {
+            if (employee == null || employee.getEmail() == null) return;
+            map.put(employee.getEmail().toLowerCase(Locale.ROOT), employee);
+        }
+
+        @Override
+        public void delete(String email) {
+            if (email == null) return;
+            map.remove(email.toLowerCase(Locale.ROOT));
+        }
+
+        @Override
+        public void deleteAll() {
+            map.clear();
+        }
+    }
 
     public boolean addEmployee(Employee employee) {
         if (employee == null || employee.getEmail() == null || employee.getEmail().isBlank()) return false;
         String emailKey = employee.getEmail().toLowerCase(Locale.ROOT);
-        if (employeesByEmail.containsKey(emailKey)) return false; // nie dodawaj duplikatu
-        employeesByEmail.put(emailKey, employee);
+        if (dao.findByEmail(emailKey).isPresent()) return false;
+        dao.save(employee);
         return true;
     }
 
     public List<Employee> getAllEmployees() {
-        return new ArrayList<>(employeesByEmail.values());
+        return dao.findAll();
     }
 
     public Optional<Employee> findByEmail(String email) {
         if (email == null || email.isBlank()) return Optional.empty();
-        return Optional.ofNullable(employeesByEmail.get(email.toLowerCase(Locale.ROOT)));
+        return dao.findByEmail(email.toLowerCase(Locale.ROOT));
     }
 
     public List<Employee> findByStatus(com.techcorp.employee.model.EmploymentStatus status) {
         if (status == null) return List.of();
-        return employeesByEmail.values().stream()
+        return dao.findAll().stream()
                 .filter(e -> status.equals(e.getStatus()))
                 .collect(Collectors.toList());
     }
@@ -44,28 +89,34 @@ public class EmployeeService {
     public boolean updateStatus(String email, com.techcorp.employee.model.EmploymentStatus status) {
         if (email == null || email.isBlank() || status == null) return false;
         String key = email.toLowerCase(Locale.ROOT);
-        Employee existing = employeesByEmail.get(key);
-        if (existing == null) return false;
+        Optional<Employee> existingOpt = dao.findByEmail(key);
+        if (existingOpt.isEmpty()) return false;
+        Employee existing = existingOpt.get();
         existing.setStatus(status);
+        dao.save(existing);
         return true;
     }
 
     public java.util.Map<com.techcorp.employee.model.EmploymentStatus, Long> getStatusDistribution() {
-        return employeesByEmail.values().stream()
+        return dao.findAll().stream()
                 .collect(Collectors.groupingBy(Employee::getStatus, Collectors.counting()));
     }
 
     public boolean removeEmployee(String email) {
         if (email == null || email.isBlank()) return false;
         String key = email.toLowerCase(Locale.ROOT);
-        return employeesByEmail.remove(key) != null;
+        Optional<Employee> existing = dao.findByEmail(key);
+        if (existing.isEmpty()) return false;
+        dao.delete(key);
+        return true;
     }
 
     public Optional<Employee> updateEmployee(String email, Employee updated) {
         if (email == null || email.isBlank() || updated == null) return Optional.empty();
         String key = email.toLowerCase(Locale.ROOT);
-        Employee existing = employeesByEmail.get(key);
-        if (existing == null) return Optional.empty();
+        Optional<Employee> existingOpt = dao.findByEmail(key);
+        if (existingOpt.isEmpty()) return Optional.empty();
+        Employee existing = existingOpt.get();
 
         // create a new Employee instance preserving the identity (email)
         String newFullName = updated.getFullName() == null ? existing.getFullName() : updated.getFullName();
@@ -74,7 +125,7 @@ public class EmployeeService {
         double newSalary = updated.getSalary();
 
         Employee replacement = new Employee(existing.getId(), newFullName, existing.getEmail(), newCompany, newPosition, newSalary);
-        employeesByEmail.put(key, replacement);
+        dao.save(replacement);
         return Optional.of(replacement);
     }
 
@@ -82,7 +133,7 @@ public class EmployeeService {
 
      // Zwraca listę pracowników, których wynagrodzenie jest niższe niż bazowe dla ich stanowiska.
     public List<Employee> validateSalaryConsistency() {
-        return employeesByEmail.values().stream()
+        return dao.findAll().stream()
                 .filter(employee -> {
                     Position position = employee.getPosition();
                     if (position == null) return false;
@@ -95,7 +146,7 @@ public class EmployeeService {
     // tworzy mapę statystyk firmy (nazwa firmy -> statystyki)
     public Map<String, CompanyStatistics> getCompanyStatistics() {
         // grupowanie po nazwie firmy bez zmiany oryginalnego zapisu (trimowane)
-        Map<String, List<Employee>> grouped = employeesByEmail.values().stream()
+        Map<String, List<Employee>> grouped = dao.findAll().stream()
                 .collect(Collectors.groupingBy(employee -> {
                     String company = employee.getCompanyName();
                     return (company == null) ? "unknown" : company.trim();
@@ -122,5 +173,15 @@ public class EmployeeService {
         return validateSalaryConsistency().stream()
                 .map(employee -> String.format("%s (%s): %.2f < %.2f", employee.getFullName(), employee.getEmail(), employee.getSalary(), employee.getPosition().getSalary()))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public int importEmployeesTransactional(List<Employee> employees) {
+        if (employees == null) return 0;
+        dao.deleteAll();
+        for (Employee e : employees) {
+            dao.save(e);
+        }
+        return employees.size();
     }
 }

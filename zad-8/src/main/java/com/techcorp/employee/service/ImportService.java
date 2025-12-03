@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.io.InputStream;
@@ -50,6 +52,8 @@ public class ImportService {
     public ImportSummary importFromXml(Path xmlPath, int maxEntries) throws IOException {
         List<String> errors = new ArrayList<>();
         AtomicInteger imported = new AtomicInteger();
+        List<Employee> toImport = new ArrayList<>();
+        Set<String> seenEmails = new HashSet<>();
 
         try (InputStream is = Files.newInputStream(xmlPath)) {
             XMLInputFactory factory = XMLInputFactory.newInstance();
@@ -125,17 +129,21 @@ public class ImportService {
                             }
 
                             validateEmployeeData(fullName, email.trim(), company.trim(), position, salary);
-                            Employee employee = new Employee(null, fullName, email.trim(), company.trim(), position, salary);
-                            boolean added = employeeService.addEmployee(employee);
-                            if (added) imported.incrementAndGet();
-                            else errors.add("Employee " + current + ": duplicate email '" + email + "'");
+                            String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+                            if (seenEmails.contains(normalizedEmail)) {
+                                errors.add("Employee " + current + ": duplicate email '" + email + "'");
+                            } else {
+                                Employee employee = new Employee(null, fullName, email.trim(), company.trim(), position, salary);
+                                toImport.add(employee);
+                                seenEmails.add(normalizedEmail);
+                            }
                         } catch (InvalidDataException ide) {
                             errors.add("Employee " + current + ": " + ide.getMessage());
                         } catch (Exception exception) {
                             throw new RuntimeException(exception);
                         }
 
-                        if (maxEntries > 0 && imported.get() >= maxEntries) break;
+                        if (maxEntries > 0 && toImport.size() >= maxEntries) break;
                     } else if (inEmployee) {
                         currentElement = null;
                     }
@@ -146,12 +154,19 @@ public class ImportService {
             throw new IOException(xse);
         }
 
-        return new ImportSummary(imported.get(), errors);
+        // perform transactional import: clear DB and insert parsed employees
+        int count = 0;
+        if (!toImport.isEmpty()) {
+            count = employeeService.importEmployeesTransactional(toImport);
+        }
+        return new ImportSummary(count, errors);
     }
 
     public ImportSummary importFromCsv(Path csvPath, int maxLines) throws IOException {
         List<String> errors = new ArrayList<>();
         AtomicInteger imported = new AtomicInteger();
+        List<Employee> toImport = new ArrayList<>();
+        Set<String> seenEmails = new HashSet<>();
 
         try (Stream<String> lines = Files.lines(csvPath)) {
             AtomicInteger lineNumber = new AtomicInteger(0);
@@ -159,7 +174,7 @@ public class ImportService {
             Stream<String> processed = lines.skip(1); // pomiń nagłówek
             if (maxLines > 0) processed = processed.limit(maxLines);
 
-            processed
+                processed
                     .filter(emptyLines -> !emptyLines.trim().isEmpty())
                     .forEach(line -> {
                         int current = lineNumber.incrementAndGet();
@@ -200,12 +215,16 @@ public class ImportService {
 
                         String fullName = (firstName + " " + lastName).trim();
                         try {
-                            // walidacja np: ujemna pensja, duplikowany email
+                            // walidacja np: ujemna pensja
                             validateEmployeeData(fullName, email, company, position, salary);
+                            String normalizedEmail = email.toLowerCase(Locale.ROOT);
+                            if (seenEmails.contains(normalizedEmail)) {
+                                errors.add("Line " + current + ": duplicate email '" + email + "'");
+                                return;
+                            }
                             Employee empployee = new Employee(null, fullName, email, company, position, salary);
-                            boolean added = employeeService.addEmployee(empployee);
-                            if (added) imported.incrementAndGet();
-                            else errors.add("Line " + current + ": duplicate email '" + email + "'");
+                            toImport.add(empployee);
+                            seenEmails.add(normalizedEmail);
                         } catch (InvalidDataException ide) {
                             errors.add("Line " + current + ": " + ide.getMessage());
                         } catch (Exception exception) {
@@ -214,7 +233,11 @@ public class ImportService {
                     });
         }
 
-        return new ImportSummary(imported.get(), errors);
+        int count = 0;
+        if (!toImport.isEmpty()) {
+            count = employeeService.importEmployeesTransactional(toImport);
+        }
+        return new ImportSummary(count, errors);
     }
 
     // walidacja danych pracownika
