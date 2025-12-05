@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Szczegóły Departamentu')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1 th:text="${department.name}">Nazwa Departamentu</h1>
+        <p><strong>Lokalizacja:</strong> <span th:text="${department.location}">-</span></p>
+        <p><strong>Budżet:</strong> <span th:text="${#numbers.formatDecimal(department.budget,0,'COMMA',2,'POINT')}">0.00</span></p>
+        <p><strong>Manager:</strong> <span th:text="${managerName}">Brak</span></p>
+
+        <h2>Pracownicy w Departamencie</h2>
+        <table class="table">
+            <thead>
+                <tr><th>Imię</th><th>Nazwisko</th><th>Stanowisko</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="employee : ${employees}">
+                    <td th:text="${employee.firstName}">Imię</td>
+                    <td th:text="${employee.lastName}">Nazwisko</td>
+                    <td th:text="${employee.position}">Stanowisko</td>
+                </tr>
+            </tbody>
+        </table>
+        <a th:href="@{/departments}">Powrót do listy departamentów</a>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>

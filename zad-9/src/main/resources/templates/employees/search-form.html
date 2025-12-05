@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Wyszukiwanie Pracowników')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1>Wyszukiwanie Pracowników</h1>
+        <form th:action="@{/employees/search}" method="post">
+            <div>
+                <label for="company">Firma:</label>
+                <input type="text" id="company" name="company" placeholder="Wprowadź nazwę firmy" />
+            </div>
+            <button type="submit">Szukaj</button>
+        </form>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>
