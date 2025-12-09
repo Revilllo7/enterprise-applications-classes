@@ -1,10 +1,17 @@
 package com.techcorp.employee.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+@Entity
+@Table(name = "departments")
 public class Department {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@NotBlank(message = "Nazwa departamentu jest wymagana")
@@ -17,8 +24,10 @@ public class Department {
 
 	private String managerEmail;
 
-	public Department() {
-	}
+	@OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = false)
+	private List<Employee> employees = new ArrayList<>();
+
+	public Department() {}
 
 	public Department(Long id, String name, String location, double budget, String managerEmail) {
 		this.id = id;
@@ -43,6 +52,9 @@ public class Department {
 	public String getManagerEmail() { return managerEmail; }
 	public void setManagerEmail(String managerEmail) { this.managerEmail = managerEmail; }
 
+	public List<Employee> getEmployees() { return employees; }
+	public void setEmployees(List<Employee> employees) { this.employees = employees; }
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -52,7 +64,5 @@ public class Department {
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(id);
-	}
+	public int hashCode() { return Objects.hash(id); }
 }

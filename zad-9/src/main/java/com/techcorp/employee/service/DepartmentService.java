@@ -1,44 +1,44 @@
 package com.techcorp.employee.service;
 
 import com.techcorp.employee.model.Department;
+import com.techcorp.employee.repository.DepartmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class DepartmentService {
-	private final Map<Long, Department> departments = new HashMap<>();
-	private final AtomicLong idSeq = new AtomicLong(1);
+	private final DepartmentRepository repository;
+
+	public DepartmentService(DepartmentRepository repository) {
+		this.repository = repository;
+	}
 
 	public Department addDepartment(Department department) {
 		if (department == null) return null;
-		long id = idSeq.getAndIncrement();
-		department.setId(id);
-		departments.put(id, department);
-		return department;
+		return repository.save(department);
 	}
 
 	public List<Department> getAllDepartments() {
-		return new ArrayList<>(departments.values());
+		return repository.findAll();
 	}
 
 	public Optional<Department> findById(Long id) {
 		if (id == null) return Optional.empty();
-		return Optional.ofNullable(departments.get(id));
+		return repository.findById(id);
 	}
 
 	public Optional<Department> updateDepartment(Long id, Department updated) {
 		if (id == null || updated == null) return Optional.empty();
-		Department existing = departments.get(id);
-		if (existing == null) return Optional.empty();
+		if (!repository.existsById(id)) return Optional.empty();
 		updated.setId(id);
-		departments.put(id, updated);
-		return Optional.of(updated);
+		return Optional.of(repository.save(updated));
 	}
 
 	public boolean removeDepartment(Long id) {
 		if (id == null) return false;
-		return departments.remove(id) != null;
+		if (!repository.existsById(id)) return false;
+		repository.deleteById(id);
+		return true;
 	}
 }
