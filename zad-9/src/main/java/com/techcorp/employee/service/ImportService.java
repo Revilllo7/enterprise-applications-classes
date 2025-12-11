@@ -51,7 +51,6 @@ public class ImportService {
 
     public ImportSummary importFromXml(Path xmlPath, int maxEntries) throws IOException {
         List<String> errors = new ArrayList<>();
-        AtomicInteger imported = new AtomicInteger();
         List<Employee> toImport = new ArrayList<>();
         Set<String> seenEmails = new HashSet<>();
 
@@ -164,7 +163,6 @@ public class ImportService {
 
     public ImportSummary importFromCsv(Path csvPath, int maxLines) throws IOException {
         List<String> errors = new ArrayList<>();
-        AtomicInteger imported = new AtomicInteger();
         List<Employee> toImport = new ArrayList<>();
         Set<String> seenEmails = new HashSet<>();
 

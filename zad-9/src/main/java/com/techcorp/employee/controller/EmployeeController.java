@@ -15,6 +15,11 @@ import com.techcorp.employee.service.EmployeeService;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.jpa.domain.Specification;
+import com.techcorp.employee.specification.EmployeeSpecification;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -26,15 +31,45 @@ public class EmployeeController {
 		this.employeeService = employeeService;
 	}
 
-	// GET /api/employees?company=X
+	// GET /api/employees with optional filters and pagination
 	@GetMapping
-	public ResponseEntity<List<EmployeeDTO>> getAll(@RequestParam(name = "company", required = false) String company) {
-		List<Employee> employees = employeeService.getAllEmployees();
-		List<EmployeeDTO> dtos = employees.stream()
-				.filter(e -> company == null || company.isBlank() || (e.getCompanyName() != null && e.getCompanyName().equalsIgnoreCase(company.trim())))
-				.map(this::toDto)
-				.collect(Collectors.toList());
-		return ResponseEntity.ok(dtos);
+	public ResponseEntity<Page<EmployeeDTO>> getAll(
+			@RequestParam(name = "company", required = false) String company,
+			@RequestParam(name = "name", required = false) String name,
+			@RequestParam(name = "status", required = false) String status,
+			@RequestParam(name = "position", required = false) String position,
+			@RequestParam(name = "departmentId", required = false) Long departmentId,
+			@PageableDefault(size = 20) Pageable pageable
+	) {
+		Specification<Employee> spec = Specification.where(EmployeeSpecification.byCompany(company))
+				.and(EmployeeSpecification.nameContains(name))
+				.and(parseStatus(status))
+				.and(parsePosition(position))
+				.and(EmployeeSpecification.byDepartmentId(departmentId));
+
+		Page<Employee> page = employeeService.findAll(spec, pageable);
+		Page<EmployeeDTO> dtoPage = page.map(this::toDto);
+		return ResponseEntity.ok(dtoPage);
+	}
+
+	private Specification<Employee> parseStatus(String status) {
+		if (status == null || status.isBlank()) return (root, q, cb) -> cb.conjunction();
+		try {
+			com.techcorp.employee.model.EmploymentStatus st = com.techcorp.employee.model.EmploymentStatus.valueOf(status.trim().toUpperCase());
+			return EmployeeSpecification.byStatus(st);
+		} catch (IllegalArgumentException ex) {
+			return (root, q, cb) -> cb.conjunction();
+		}
+	}
+
+	private Specification<Employee> parsePosition(String position) {
+		if (position == null || position.isBlank()) return (root, q, cb) -> cb.conjunction();
+		try {
+			com.techcorp.employee.model.Position pos = com.techcorp.employee.model.Position.valueOf(position.trim().toUpperCase());
+			return EmployeeSpecification.byPosition(pos);
+		} catch (IllegalArgumentException ex) {
+			return (root, q, cb) -> cb.conjunction();
+		}
 	}
 
 	// GET /api/employees/{email}

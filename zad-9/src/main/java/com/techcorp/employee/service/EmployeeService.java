@@ -11,6 +11,9 @@ import com.techcorp.employee.model.Employee;
 import com.techcorp.employee.model.EmploymentStatus;
 import com.techcorp.employee.model.Position;
 import com.techcorp.employee.repository.EmployeeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
  * Serwis przechowujący pracowników i udostępniający operacje analityczne.
@@ -134,5 +137,9 @@ public class EmployeeService {
         repository.deleteAll();
         repository.saveAll(employees);
         return employees.size();
+    }
+
+    public Page<Employee> findAll(Specification<Employee> spec, Pageable pageable) {
+        return repository.findAll(spec, pageable);
     }
 }

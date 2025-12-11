@@ -1,6 +1,5 @@
 package com.techcorp.employee.specification;
 
-import com.techcorp.employee.model.Department;
 import com.techcorp.employee.model.Employee;
 import com.techcorp.employee.model.EmploymentStatus;
 import com.techcorp.employee.model.Position;

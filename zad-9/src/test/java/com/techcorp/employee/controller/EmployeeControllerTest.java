@@ -17,7 +17,6 @@ import com.techcorp.employee.service.EmployeeService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -43,16 +42,19 @@ class EmployeeControllerTest {
     }
 
     @Test
-    @DisplayName("GET all employees returns 200 and JSON array")
+        @DisplayName("GET all employees returns 200 and paginated JSON")
     void getAllEmployees() throws Exception {
         Employee e = sampleEmployee();
-        when(employeeService.getAllEmployees()).thenReturn(List.of(e));
+        org.springframework.data.domain.Page<com.techcorp.employee.model.Employee> page =
+            new org.springframework.data.domain.PageImpl<>(java.util.List.of(e));
+        when(employeeService.findAll(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+            .thenReturn(page);
 
         mockMvc.perform(get("/api/employees").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(java.util.Objects.requireNonNull(MediaType.APPLICATION_JSON)))
-                .andExpect(jsonPath("$[0].email").value("jan@example.com"))
-                .andExpect(jsonPath("$[0].firstName").value("Jan"));
+            .andExpect(jsonPath("$.content[0].email").value("jan@example.com"))
+            .andExpect(jsonPath("$.content[0].firstName").value("Jan"));
     }
 
     @Test
@@ -137,16 +139,18 @@ class EmployeeControllerTest {
     }
 
     @Test
-    @DisplayName("Filter employees by company")
+        @DisplayName("Filter employees by company (paginated)")
     void filterByCompany() throws Exception {
         Employee e1 = new Employee("Jan Kowalski", "jan@example.com", "TechCorp", Position.PROGRAMISTA, 8000.0);
-        Employee e2 = new Employee("Anna Nowak", "anna@example.com", "OtherCo", Position.MANAGER, 12000.0);
-        when(employeeService.getAllEmployees()).thenReturn(List.of(e1, e2));
+        org.springframework.data.domain.Page<com.techcorp.employee.model.Employee> page =
+            new org.springframework.data.domain.PageImpl<>(java.util.List.of(e1));
+        when(employeeService.findAll(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+            .thenReturn(page);
 
         mockMvc.perform(get("/api/employees").param("company", "TechCorp").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].email").value("jan@example.com"));
+            .andExpect(jsonPath("$.content.length()").value(1))
+            .andExpect(jsonPath("$.content[0].email").value("jan@example.com"));
     }
 
     @Test

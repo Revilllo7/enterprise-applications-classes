@@ -53,9 +53,6 @@ public class FileUploadControllerTest {
 	private EmployeeService employeeService;
 
 	@Autowired
-	private ReportGeneratorService reportGeneratorService;
-
-	@Autowired
 	private EmployeeDocumentService employeeDocumentService;
 
 	@Test
