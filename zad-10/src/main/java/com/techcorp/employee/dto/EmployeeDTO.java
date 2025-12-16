@@ -1,8 +1,10 @@
 package com.techcorp.employee.dto;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+import com.techcorp.employee.validation.TechCorpEmail;
 
 public class EmployeeDTO {
 	private Long id;
@@ -38,6 +40,7 @@ public class EmployeeDTO {
     }
 
 	@NotBlank(message = "Imię jest wymagane")
+	@Size(min = 2, message = "Imię musi mieć co najmniej 2 znaki")
 	public String getFirstName() { 
 	    return firstName; 
 	}
@@ -46,6 +49,8 @@ public class EmployeeDTO {
 	    this.firstName = firstName; 
 	}
 
+	@NotBlank(message = "Nazwisko jest wymagane")
+	@Size(min = 2, message = "Nazwisko musi mieć co najmniej 2 znaki")
 	public String getLastName() { 
         return lastName; 
     }
@@ -56,6 +61,7 @@ public class EmployeeDTO {
 
 	@NotBlank(message = "Email jest wymagany")
 	@Email(message = "Nieprawidłowy format email")
+	@TechCorpEmail(message = "Email musi kończyć się na @techcorp.com")
 	public String getEmail() { 
 	    return email; 
 	}
@@ -72,6 +78,7 @@ public class EmployeeDTO {
         this.company = company; 
     }
 
+	@NotBlank(message = "Stanowisko jest wymagane")
 	public String getPosition() { 
         return position; 
     }
@@ -80,7 +87,7 @@ public class EmployeeDTO {
         this.position = position; 
     }
 
-	@Min(value = 0, message = "Wynagrodzenie nie może być ujemne")
+	@Positive(message = "Wynagrodzenie musi być większe od 0")
 	public double getSalary() { 
 	    return salary; 
 	}
@@ -89,6 +96,7 @@ public class EmployeeDTO {
 	    this.salary = salary; 
 	}
 
+	@NotBlank(message = "Status jest wymagany")
 	public String getStatus() { 
         return status; 
     }

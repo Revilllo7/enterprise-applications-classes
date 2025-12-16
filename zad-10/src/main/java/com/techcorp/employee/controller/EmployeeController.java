@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.techcorp.employee.dto.EmployeeDTO;
+import com.techcorp.employee.dto.StatusUpdateDTO;
+import jakarta.validation.Valid;
 import com.techcorp.employee.model.Employee;
 import com.techcorp.employee.model.EmploymentStatus;
 import com.techcorp.employee.model.Position;
@@ -82,11 +84,7 @@ public class EmployeeController {
 
 	// POST /api/employees
 	@PostMapping
-	public ResponseEntity<EmployeeDTO> create(@RequestBody EmployeeDTO dto) {
-		if (dto == null || dto.getEmail() == null || dto.getEmail().isBlank()) {
-			return ResponseEntity.badRequest().build();
-		}
-
+	public ResponseEntity<EmployeeDTO> create(@Valid @RequestBody EmployeeDTO dto) {
 		Employee toCreate = dtoToEmployee(dto, dto.getEmail());
 		boolean created = employeeService.addEmployee(toCreate);
 		if (!created) {
@@ -108,7 +106,7 @@ public class EmployeeController {
 
 	// PUT /api/employees/{email}
 	@PutMapping("/{email}")
-	public ResponseEntity<EmployeeDTO> update(@PathVariable("email") String email, @RequestBody EmployeeDTO dto) {
+	public ResponseEntity<EmployeeDTO> update(@PathVariable("email") String email, @Valid @RequestBody EmployeeDTO dto) {
 		return employeeService.findByEmail(email)
 				.map(existing -> {
 					// create updated Employee preserving identity (email)
@@ -130,10 +128,7 @@ public class EmployeeController {
 
 	// PATCH /api/employees/{email}/status
 	@PatchMapping("/{email}/status")
-	public ResponseEntity<EmployeeDTO> patchStatus(@PathVariable("email") String email, @RequestBody EmployeeDTO dto) {
-		if (dto == null || dto.getStatus() == null || dto.getStatus().isBlank()) {
-			return ResponseEntity.badRequest().build();
-		}
+	public ResponseEntity<EmployeeDTO> patchStatus(@PathVariable("email") String email, @Valid @RequestBody StatusUpdateDTO dto) {
 		try {
 			EmploymentStatus status = EmploymentStatus.valueOf(dto.getStatus().trim().toUpperCase());
 			boolean ok = employeeService.updateStatus(email, status);
