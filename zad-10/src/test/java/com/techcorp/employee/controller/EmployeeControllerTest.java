@@ -81,15 +81,15 @@ class EmployeeControllerTest {
     @Test
     @DisplayName("POST new employee returns 201 and Location header")
     void postCreateEmployee() throws Exception {
-        Employee e = sampleEmployee();
+        Employee e = new Employee("Jan Kowalski", "jan@techcorp.com", "TechCorp", Position.PROGRAMISTA, 8000.0);
         // service will accept creation
         when(employeeService.addEmployee(any(Employee.class))).thenReturn(true);
-        when(employeeService.findByEmail("jan@example.com")).thenReturn(Optional.of(e));
+        when(employeeService.findByEmail("jan@techcorp.com")).thenReturn(Optional.of(e));
 
         String payload = "{" +
                 "\"firstName\":\"Jan\"," +
                 "\"lastName\":\"Kowalski\"," +
-                "\"email\":\"jan@example.com\"," +
+                "\"email\":\"jan@techcorp.com\"," +
                 "\"company\":\"TechCorp\"," +
                 "\"position\":\"PROGRAMISTA\"," +
                 "\"salary\":8000.0," +
@@ -102,11 +102,11 @@ class EmployeeControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(result -> {
                     String loc = result.getResponse().getHeader("Location");
-                    if (loc == null || !loc.contains("/api/employees/jan@example.com")) {
+                    if (loc == null || !loc.contains("/api/employees/jan@techcorp.com")) {
                         throw new AssertionError("Location header missing or incorrect: " + loc);
                     }
                 })
-                .andExpect(jsonPath("$.email").value("jan@example.com"));
+                .andExpect(jsonPath("$.email").value("jan@techcorp.com"));
     }
 
     @Test
@@ -116,7 +116,7 @@ class EmployeeControllerTest {
         String payload = "{" +
                 "\"firstName\":\"Jan\"," +
                 "\"lastName\":\"Kowalski\"," +
-                "\"email\":\"jan@example.com\"," +
+                "\"email\":\"jan@techcorp.com\"," +
                 "\"company\":\"TechCorp\"," +
                 "\"position\":\"PROGRAMISTA\"," +
                 "\"salary\":8000.0," +

@@ -5,6 +5,10 @@ import java.util.stream.Collectors;
 import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import com.techcorp.employee.model.CompanyStatistics;
 import com.techcorp.employee.model.Employee;
@@ -20,13 +24,14 @@ import org.springframework.data.jpa.domain.Specification;
  * Wszystkie operacje na kolekcjach wykonane przez Stream API.
  */
 @Service
+@Validated
 public class EmployeeService {
     private final EmployeeRepository repository;
     public EmployeeService(EmployeeRepository repository) {
         this.repository = repository;
     }
 
-    public boolean addEmployee(Employee employee) {
+    public boolean addEmployee(@Valid @NotNull Employee employee) {
         if (employee == null || employee.getEmail() == null || employee.getEmail().isBlank()) return false;
         String emailKey = employee.getEmail().toLowerCase(Locale.ROOT);
         if (repository.existsByEmailIgnoreCase(emailKey)) return false;
@@ -38,17 +43,17 @@ public class EmployeeService {
         return repository.findAll();
     }
 
-    public Optional<Employee> findByEmail(String email) {
+    public Optional<Employee> findByEmail(@NotBlank String email) {
         if (email == null || email.isBlank()) return Optional.empty();
         return repository.findByEmailIgnoreCase(email.toLowerCase(Locale.ROOT));
     }
 
-    public List<Employee> findByStatus(EmploymentStatus status) {
+    public List<Employee> findByStatus(@NotNull EmploymentStatus status) {
         if (status == null) return List.of();
         return repository.findByStatus(status);
     }
 
-    public boolean updateStatus(String email, EmploymentStatus status) {
+    public boolean updateStatus(@NotBlank String email, @NotNull EmploymentStatus status) {
         if (email == null || email.isBlank() || status == null) return false;
         String key = email.toLowerCase(Locale.ROOT);
         Optional<Employee> existingOpt = repository.findByEmailIgnoreCase(key);
@@ -64,7 +69,7 @@ public class EmployeeService {
                 .collect(Collectors.groupingBy(Employee::getStatus, Collectors.counting()));
     }
 
-    public boolean removeEmployee(String email) {
+    public boolean removeEmployee(@NotBlank String email) {
         if (email == null || email.isBlank()) return false;
         String key = email.toLowerCase(Locale.ROOT);
         Optional<Employee> existing = repository.findByEmailIgnoreCase(key);
@@ -73,7 +78,7 @@ public class EmployeeService {
         return true;
     }
 
-    public Optional<Employee> updateEmployee(String email, Employee updated) {
+    public Optional<Employee> updateEmployee(@NotBlank String email, @Valid @NotNull Employee updated) {
         if (email == null || email.isBlank() || updated == null) return Optional.empty();
         String key = email.toLowerCase(Locale.ROOT);
         Optional<Employee> existingOpt = repository.findByEmailIgnoreCase(key);
@@ -132,7 +137,7 @@ public class EmployeeService {
     }
 
     @Transactional
-    public int importEmployeesTransactional(List<Employee> employees) {
+    public int importEmployeesTransactional(@Valid @NotNull List<@Valid Employee> employees) {
         if (employees == null) return 0;
         repository.deleteAll();
         repository.saveAll(employees);
