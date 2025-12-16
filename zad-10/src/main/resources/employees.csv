@@ -1,0 +1,10 @@
+firstName,lastName,email,company,position,salary
+Jan,Kowalski,jan.kowalski@example.com,TechCorp,PROGRAMISTA,9000
+Anna,Nowak,anna.nowak@example.com,DataSoft,MANAGER,13000
+Banna,Nowak,banna.nowak@example.com,DataSoft,MANAGER,14000
+Canna,Nowak,canna.nowak@example.com,DataSoft,PREZES,23000
+Tomasz,Lewandowski,tomasz.lewandowski@example.com,DataSoft,INVALID_POSITION,5000
+Magdalena,Wójcik,magdalena.wojcik@example.com,CloudInc,PREZES,-5000
+Michał,Kamiński,michal.kaminski@example.com,TechCorp,PROGRAMISTA,abc
+Wojtek,Kamiński,wojtek.kaminski@example.com,TechCorp,PROGRAMISTA,20000
+Ubogi,Kamiński,ubogi.kaminski@example.com,TechCorp,PROGRAMISTA,2000

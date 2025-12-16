@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Statystyki')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1>Statystyki</h1>
+        <p>W tej sekcji znajdziesz różne statystyki dotyczące pracowników i departamentów.</p>
+
+        <section>
+            <h2>Ogólne</h2>
+            <ul>
+                <li>Liczba pracowników: <strong th:text="${totalEmployees}">0</strong></li>
+                <li>Średnie wynagrodzenie: <strong th:text="${#numbers.formatDecimal(avgSalary,0,'COMMA',2,'POINT')}">0.00</strong></li>
+                <li>Liczba departamentów: <strong th:text="${totalDepartments}">0</strong></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Statystyki dla każdej firmy</h2>
+            <table class="table">
+                <thead>
+                    <tr><th>Firma</th><th>Liczba pracowników</th><th>Średnie wynagrodzenie</th><th>Najwyżej opłacony</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="entry : ${companyStats.entrySet()}">
+                        <td><a th:href="@{/statistics/company/{name}(name=${entry.key})}" th:text="${entry.key}">Firma</a></td>
+                        <td th:text="${entry.value.employeeCount}">0</td>
+                        <td th:text="${#numbers.formatDecimal(entry.value.averageSalary,0,'COMMA',2,'POINT')}">0.00</td>
+                        <td th:text="${entry.value.highestPaidFullName}">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Rozkład po stanowiskach</h2>
+            <ul>
+                <li th:each="pos : ${byPosition.entrySet()}">
+                    <span th:text="${pos.key}">POSITION</span>: <strong th:text="${pos.value}">0</strong>
+                </li>
+            </ul>
+        </section>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>

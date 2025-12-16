@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: baseHead('Pracownicy')"></head>
+<body>
+    <div th:replace="layout :: header"></div>
+
+    <main class="container">
+        <h1>Pracownicy</h1>
+
+        <div th:if="${message}" class="message success" th:text="${message}"></div>
+        <div th:if="${error}" class="message error" th:text="${error}"></div>
+
+        <a class="btn" th:href="@{/employees/add}">Dodaj Pracownika</a>
+
+        <table class="table">
+            <thead>
+                <tr><th>Imię</th><th>Nazwisko</th><th>Stanowisko</th><th>Akcje</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="employee : ${employees}">
+                    <td th:text="${employee.firstName}">Imię</td>
+                    <td th:text="${employee.lastName}">Nazwisko</td>
+                    <td th:text="${employee.position}">Stanowisko</td>
+                    <td>
+                        <a th:href="@{/employees/edit/{email}(email=${employee.email})}">Edytuj</a>
+                        <a th:href="@{/employees/delete/{email}(email=${employee.email})}" th:onclick="return confirm('Czy na pewno chcesz usunąć tego pracownika?');">Usuń</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <div th:replace="layout :: footer"></div>
+</body>
+</html>
