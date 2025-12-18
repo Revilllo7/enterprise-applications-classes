@@ -25,7 +25,7 @@ public class FileStorageService {
 
     public FileStorageService(@Value("${app.upload.directory}") String uploadDirectory,
                               @Value("${spring.servlet.multipart.max-file-size}") String maxFileSizeString) {
-        this.fileStorageLocation = Paths.get(uploadDirectory).toAbsolutePath().normalize();
+        this.fileStorageLocation = Paths.get(Objects.requireNonNull(uploadDirectory, "uploadDirectory must not be null")).toAbsolutePath().normalize();
         // parse max file size from application.properties
         String maxFileSizeNonNull = Objects.requireNonNull(maxFileSizeString, "spring.servlet.multipart.max-file-size must not be null");
         this.maxFileSize = DataSize.parse(maxFileSizeNonNull).toBytes();
@@ -45,6 +45,10 @@ public class FileStorageService {
      * Returns the relative path (subdir/uniqueFileName) stored.
      */
     public String storeFileInSubDirectory(MultipartFile file, String subDir) {
+        if (file == null) {
+            throw new InvalidFileException("File must not be null");
+        }
+        String safeSubDir = Objects.requireNonNull(subDir, "subDir must not be null");
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
             throw new InvalidFileException("File name is null or empty");
@@ -60,7 +64,7 @@ public class FileStorageService {
                 fileExtension = originalFileName.substring(dotIndex);
             }
             String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
-            java.nio.file.Path dirPath = this.fileStorageLocation.resolve(subDir).toAbsolutePath().normalize();
+            java.nio.file.Path dirPath = this.fileStorageLocation.resolve(safeSubDir).toAbsolutePath().normalize();
             Files.createDirectories(dirPath);
             Path targetLocation = dirPath.resolve(uniqueFileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
@@ -77,16 +81,21 @@ public class FileStorageService {
      * Returns the relative path (subdir/filename) stored.
      */
     public String storeFileWithNameInSubDirectory(MultipartFile file, String subDir, String desiredFileName) {
+        if (file == null) {
+            throw new InvalidFileException("File must not be null");
+        }
+        String safeSubDir = Objects.requireNonNull(subDir, "subDir must not be null");
+        String safeDesired = Objects.requireNonNull(desiredFileName, "desiredFileName must not be null");
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
             throw new InvalidFileException("File name is null or empty");
         }
-        String cleanDesired = StringUtils.cleanPath(desiredFileName);
+        String cleanDesired = StringUtils.cleanPath(safeDesired);
         try {
             if (cleanDesired.contains("..")) {
                 throw new InvalidFileException("Invalid path sequence in file name: " + cleanDesired);
             }
-            java.nio.file.Path dirPath = this.fileStorageLocation.resolve(subDir).toAbsolutePath().normalize();
+            java.nio.file.Path dirPath = this.fileStorageLocation.resolve(safeSubDir).toAbsolutePath().normalize();
             Files.createDirectories(dirPath);
             Path targetLocation = dirPath.resolve(cleanDesired);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
@@ -98,6 +107,9 @@ public class FileStorageService {
     }
     
     public String storeFile(MultipartFile file) {
+        if (file == null) {
+            throw new InvalidFileException("File must not be null");
+        }
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
             throw new InvalidFileException("File name is null or empty");
@@ -133,11 +145,17 @@ public class FileStorageService {
     }
 
     public Resource loadFileAsResource(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            throw new FileNotFoundException("File name is null or empty");
+        }
         
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
             java.net.URI uri = filePath.toUri();
-            Resource resource = new UrlResource(Objects.requireNonNull(uri));
+            if (uri == null) {
+                throw new FileNotFoundException("File not found " + fileName);
+            }
+            Resource resource = new UrlResource(uri);
             if (resource.exists()) {
                 return resource;
             } else {
@@ -169,6 +187,9 @@ public class FileStorageService {
     }
     
     public void deleteFile(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            throw new FileNotFoundException("File name is null or empty");
+        }
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
             if (Files.exists(filePath)) {
@@ -184,16 +205,17 @@ public class FileStorageService {
     }
 
     public void validateFile(MultipartFile file, long maxFileSize, String[] allowedExtensions) {
+        if (file == null) {
+            throw new InvalidFileException("File must not be null");
+        }
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
-            deleteFile(originalFileName);
-            throw new InvalidFileException("File name was null or empty, deleted.");
+            throw new InvalidFileException("File name was null or empty");
         }
 
         if (file.isEmpty() || file.getSize() == 0) {
             // reject empty file
-            deleteFile(originalFileName);
-            throw new InvalidFileException("File was empty, deleted.");
+            throw new InvalidFileException("File was empty");
         }
 
         originalFileName = StringUtils.cleanPath(originalFileName);

@@ -60,6 +60,7 @@ class DepartmentViewControllerTest {
         assertTrue(model.containsAttribute("department"));
         assertTrue(model.containsAttribute("managers"));
         var managers = (List<?>) model.getAttribute("managers");
+        assertNotNull(managers);
         assertEquals(1, managers.size());
     }
 

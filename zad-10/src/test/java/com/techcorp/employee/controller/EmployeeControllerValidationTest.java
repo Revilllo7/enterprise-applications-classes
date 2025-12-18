@@ -38,10 +38,10 @@ class EmployeeControllerValidationTest {
                 "}";
 
         mockMvc.perform(post("/api/employees")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(payload))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.email").value(org.hamcrest.Matchers.containsString("@techcorp.com")));
     }
 
@@ -59,10 +59,10 @@ class EmployeeControllerValidationTest {
                 "}";
 
         mockMvc.perform(post("/api/employees")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(payload))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.salary").exists());
     }
 }

@@ -101,7 +101,7 @@ public class FileUploadControllerTest {
 	mockMvc.perform(multipart("/api/files/import/csv").file(file))
 		.andExpect(status().isBadRequest())
 		.andExpect(content().contentTypeCompatibleWith(Objects.requireNonNull(MediaType.APPLICATION_JSON)))
-		.andExpect(jsonPath("$.errors[0]").value((org.hamcrest.Matcher<? super String>) containsString("File type not allowed: txt")));
+		.andExpect(jsonPath("$.errors[0]").value(containsString("File type not allowed: txt")));
 	}
 
 	@Test

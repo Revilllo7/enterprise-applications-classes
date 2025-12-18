@@ -46,7 +46,7 @@ class EmployeeControllerTest {
     void getAllEmployees() throws Exception {
         Employee e = sampleEmployee();
         org.springframework.data.domain.Page<com.techcorp.employee.model.Employee> page =
-            new org.springframework.data.domain.PageImpl<>(java.util.List.of(e));
+            new org.springframework.data.domain.PageImpl<>(java.util.Objects.requireNonNull(java.util.List.of(e)));
         when(employeeService.findAll(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
             .thenReturn(page);
 
@@ -143,7 +143,7 @@ class EmployeeControllerTest {
     void filterByCompany() throws Exception {
         Employee e1 = new Employee("Jan Kowalski", "jan@example.com", "TechCorp", Position.PROGRAMISTA, 8000.0);
         org.springframework.data.domain.Page<com.techcorp.employee.model.Employee> page =
-            new org.springframework.data.domain.PageImpl<>(java.util.List.of(e1));
+            new org.springframework.data.domain.PageImpl<>(java.util.Objects.requireNonNull(java.util.List.of(e1)));
         when(employeeService.findAll(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
             .thenReturn(page);
 

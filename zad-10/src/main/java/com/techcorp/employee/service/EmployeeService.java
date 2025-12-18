@@ -16,6 +16,7 @@ import com.techcorp.employee.model.EmploymentStatus;
 import com.techcorp.employee.model.Position;
 import com.techcorp.employee.repository.EmployeeRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -28,7 +29,7 @@ import org.springframework.data.jpa.domain.Specification;
 public class EmployeeService {
     private final EmployeeRepository repository;
     public EmployeeService(EmployeeRepository repository) {
-        this.repository = repository;
+        this.repository = Objects.requireNonNull(repository, "repository must not be null");
     }
 
     public boolean addEmployee(@Valid @NotNull Employee employee) {
@@ -139,12 +140,16 @@ public class EmployeeService {
     @Transactional
     public int importEmployeesTransactional(@Valid @NotNull List<@Valid Employee> employees) {
         if (employees == null) return 0;
+        if (employees.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("Employee list contains null elements");
+        }
         repository.deleteAll();
         repository.saveAll(employees);
         return employees.size();
     }
 
     public Page<Employee> findAll(Specification<Employee> spec, Pageable pageable) {
-        return repository.findAll(spec, pageable);
+        Pageable effectivePageable = pageable != null ? pageable : PageRequest.of(0, 20);
+        return repository.findAll(spec, effectivePageable);
     }
 }
